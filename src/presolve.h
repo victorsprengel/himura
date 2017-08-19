@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "input.h"
 #include "uf.h"
-#define GAMMA 10
+#define GAMMA 5
 #define MAX_D std::numeric_limits<double>::max()
 using namespace std;
 using int_pair = pair<int,int>;

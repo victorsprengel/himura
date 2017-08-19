@@ -36,5 +36,5 @@ build/ub_helper.o: src/ub_helper.cpp src/ub_helper.h src/graph.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 clean:
-	rm -f build/*
+	rm -f build/* bin/*
 
