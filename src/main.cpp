@@ -214,7 +214,6 @@ int main(int argc, char** argv) {
   int n, m;
   Input in = Input(argv[1], argv[2], n, m);
   cout << "n = " << n << "    m = " << m << endl;
-
   pair<vector<set<int>>, vector<set<int>>> allowed_vars = allowed_variables(in, n);
 
   try {
