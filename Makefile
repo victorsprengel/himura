@@ -38,3 +38,8 @@ build/ub_helper.o: src/ub_helper.cpp src/ub_helper.h src/graph.h
 clean:
 	rm -f build/* bin/*
 
+test: router
+	./bin/router vehicles.data packages.data
+
+testout: router
+	./bin/router vehicles.data packages.data > out
