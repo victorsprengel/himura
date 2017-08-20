@@ -1,37 +1,50 @@
 #include "presolve.h"
 
-vector<set<int>> get_reach(const Input& in, const int& n) { 
-  vector<set<int>> reach;
-  reach.emplace_back();
+static set<int> closest_delivers(const int& i, const Input& in, const int& n) {
+  vector<pair<int,double>> min = vector<pair<int,double>>(GAMMA);
+  fill(min.begin(), min.end(), pair<int,double>(-1, MAX_D));
 
-  for (int i = 1; i <= n+1; i++)
+  for (int j = 1; j <= n; j++) {
+    if (i == j)
+      continue;
+
+    int index = 0;
+    while (index < GAMMA && in.d.at(int_pair(i,j)) > min[index].second)
+      index++;
+
+    if (index < GAMMA) {
+      for (int b = GAMMA - 1; b > index; b--) {
+        min[b] = min[b-1];
+      }
+      min[index] = pair<int,double>(j, in.d.at(int_pair(i,j)));
+    }
+  }
+
+  set<int> closest;
+  for (pair<int,double> p : min) {
+    if (p.first > 0) {
+      closest.insert(p.first);
+    }
+  }
+  closest.insert(n+1);
+
+  return closest;
+}
+
+static vector<set<int>> closest_delivers(const Input& in, const int& n) { 
+  vector<set<int>> reach;
+
+  reach.emplace_back();
+  for (int i = 1; i <= n+1; i++) {
     reach[0].insert(i);
+  }
 
   for (int i = 1; i <= n; i++) {
     reach.emplace_back();
-    pair<int,double> min[GAMMA];
-    for (int j = 0; j < GAMMA; j++)
-      min[j] = pair<int,double>(-1, MAX_D);
 
-    for (int j = 1; j <= n; j++) {
-      if (i == j)
-        continue;
-
-      int index = 0;
-      while (index < GAMMA && in.d.at(int_pair(i,j)) > min[index].second)
-        index++;
-
-      if (index < GAMMA) {
-        for (int b = GAMMA - 1; b > index; b--)
-          min[b] = min[b-1];
-        min[index] = pair<int,double>(j, in.d.at(int_pair(i,j)));
-      }
+    for (int j : closest_delivers(i, in, n)) {
+      reach[i].insert(j);
     }
-
-    for (pair<int,double> p : min)
-      if (get<0>(p) > 0)
-        reach[i].insert(get<0>(p));
-    reach[i].insert(n+1);
   }
 
   reach.emplace_back();
@@ -39,20 +52,7 @@ vector<set<int>> get_reach(const Input& in, const int& n) {
   return reach;
 }
 
-vector<set<int>> get_reached(const vector<set<int>>& reach, const int& n) {
-  vector<set<int>> reached;
-
-  for (int i = 0; i <= n+1; i++)
-    reached.emplace_back();
-
-  for (int i = 0; i <= n+1; i++)
-    for (int j : reach[i])
-      reached[j].insert(i);
-
-  return reached;
-}
-
-void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, const Input& in, const int& n) {
+static void increment_with_mst(vector<set<int>>& reach, const Input& in, const int& n) {
   vector<tuple<int, int, double>> edges;
 
   for (int i = 1; i <= n; i++)
@@ -65,17 +65,17 @@ void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, cons
       });
 
   vector<tuple<int,int,double>> mst;
-  UnionFind uf = UnionFind(n);
+  UnionFind uf = UnionFind(n+1);
 
   for (tuple<int,int,double> edge : edges) {
     int i = get<0>(edge);
     int j = get<1>(edge);
 
-    if (uf.find(i-1) == uf.find(j-1))
+    if (uf.find(i) == uf.find(j))
       continue;
 
     mst.push_back(edge);
-    uf.join(i-1, j-1);
+    uf.join(i, j);
   }
 
   for (tuple<int,int,double> edge : mst) {
@@ -84,8 +84,27 @@ void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, cons
 
     reach[i].insert(j);
     reach[j].insert(i);
-    reached[j].insert(i);
-    reached[i].insert(j);
   }
+}
+
+static vector<set<int>> reached_from_reach(const vector<set<int>>& reach, const int& n) {
+  vector<set<int>> reached;
+
+  for (int i = 0; i <= n+1; i++)
+    reached.emplace_back();
+
+  for (int i = 0; i <= n+1; i++)
+    for (int j : reach[i])
+      reached[j].insert(i);
+
+  return reached;
+}
+
+pair<vector<set<int>>, vector<set<int>>> allowed_variables(const Input& in, const int& n) {
+  vector<set<int>> reach = closest_delivers(in, n);
+  increment_with_mst(reach, in, n);
+  vector<set<int>> reached = reached_from_reach(reach, n);
+
+  return pair<vector<set<int>>, vector<set<int>>>(reach, reached);
 }
 

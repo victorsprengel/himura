@@ -215,21 +215,19 @@ int main(int argc, char** argv) {
   Input in = Input(argv[1], argv[2], n, m);
   cout << "n = " << n << "    m = " << m << endl;
 
-  vector<set<int>> reach = get_reach(in, n);
-  vector<set<int>> reached = get_reached(reach, n);
-  increment_with_mst(reach, reached, in, n);
+  pair<vector<set<int>>, vector<set<int>>> allowed_vars = allowed_variables(in, n);
 
   try {
     GRBEnv env = GRBEnv();
     GRBModel mdl = GRBModel(env);
-    auto x = init_x(n, m, mdl, in, reach);
+    auto x = init_x(n, m, mdl, in, allowed_vars.first);
     auto y = init_y(m, mdl, in);
     mdl.set(GRB_IntAttr_ModelSense, GRB_MINIMIZE);
     mdl.set(GRB_IntParam_OutputFlag, 0);
-    add_constraints(mdl, x, y, n, m, in, reach, reached);
+    add_constraints(mdl, x, y, n, m, in, allowed_vars.first, allowed_vars.second);
 
     vector<triple> solution;
-    double optimal_value =  branch_and_bound(mdl, x, n, m, solution, reach, reached, in);
+    double optimal_value =  branch_and_bound(mdl, x, n, m, solution, allowed_vars.first, allowed_vars.second, in);
     cout << "optimal value: " << optimal_value << endl;
 
     if (abs(MAX_D - optimal_value) > 1e8) {
