@@ -2,39 +2,36 @@
 
 static bool fixed_vars_contain_cycle(node_ptr leaf, const int& n) {
   Graph g = Graph(n+2);
-  node_ptr current = leaf, p;
-  while ((p = current->parent) != nullptr) {
-    if (current->fixed_value == 1) {
-      g.add_arc(p->i(), p->j());
+  while (leaf->parent != nullptr) {
+    if (leaf->fixed_value) {
+      g.add_arc(leaf->i(), leaf->j());
     }
-    current = p;
+    leaf = leaf->parent;
   }
   return g.tour().size();
 }
 
 static void fix_vars(node_ptr leaf, x_vars& x) {
-  node_ptr current = leaf, p;
-  while ((p = current->parent) != nullptr) {
-    GRBVar& var = x[p->i()][p->j()][p->k()];
-    if (current->fixed_value) {
+  while (leaf->parent != nullptr) {
+    GRBVar& var = x[leaf->i()][leaf->j()][leaf->k()];
+    if (leaf->fixed_value) {
       var.set(GRB_DoubleAttr_LB, 1.0);
       var.set(GRB_DoubleAttr_Start, 1.0);
     } else {
       var.set(GRB_DoubleAttr_UB, 0.0);
       var.set(GRB_DoubleAttr_Start, 0.0);
     }
-    current = p;       
+    leaf = leaf->parent;
   }
 }
 
 static void unfix_vars(node_ptr leaf, x_vars& x) {
-  node_ptr current = leaf, p;
-  while ((p = current->parent) != nullptr) {
-    GRBVar& var = x[p->i()][p->j()][p->k()];
+  while (leaf->parent != nullptr) {
+    GRBVar& var = x[leaf->i()][leaf->j()][leaf->k()];
     var.set(GRB_DoubleAttr_LB, 0.0);
     var.set(GRB_DoubleAttr_UB, 1.0);
     var.set(GRB_DoubleAttr_Start, GRB_UNDEFINED);
-    current = p;       
+    leaf = leaf->parent;
   }
 }
 
@@ -133,9 +130,10 @@ static void solve_and_branch(Container &col , GRBModel& mdl, x_vars& x, const in
 
   covering_constraints(x, mdl, n, m, in, reach, reached);
 
-  if (current->has_children(reach)) {
-    current->lc = new Node(n, m, current->depth + 1, current, 0, current->LLB, reach);
-    current->rc = new Node(n, m, current->depth + 1, current, 1, current->LLB, reach);
+  int next_node = child(current, reach);
+  if (next_node != -1) {
+    current->lc = new Node(n, m, next_node, current, 1, current->LLB);
+    current->rc = new Node(n, m, next_node, current, 0, current->LLB);
     col.push(node_ptr(current->lc));
     col.push(node_ptr(current->rc));
   } else if (mdl.get(GRB_DoubleAttr_ObjVal) < GUB) {
@@ -153,7 +151,7 @@ double branch_and_bound(GRBModel& mdl, x_vars& x, const int& n, const int& m,
   double GUB = MAX_D;
   auto comparator = [](const node_ptr l, const node_ptr r) { return l->LLB > r->LLB; };
   priority_queue<node_ptr, vector<node_ptr>, decltype(comparator)> pq(comparator);
-  pq.push(make_shared<Node>(n, m, 0, nullptr, -1, 0.0, reach));
+  pq.push(make_shared<Node>(n, m, -1, nullptr, -1, 0.0));
 
   cout << "Branch & Bound" << endl;
   while (!pq.empty() && pq.top()->LLB < GUB) {
