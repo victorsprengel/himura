@@ -4,17 +4,17 @@ static bool contains(const vector<pair<int,int>>& v, const pair<int,int>& q) {
   return find(v.begin(), v.end(), q) != v.end();
 }
 
-static bool violates_c(const int& k, const input& in, const ub_info& ubh) {
+static bool violates_c(const int& k, const Input& in, const ub_info& ubh) {
   return !(ubh.usedVol[k] <= in.C[k] && ubh.usedVal[k] <= in.V[k] && ubh.usedTime[k] <= in.J[k]);
 }
 
-static bool would_violate_c(const int& i, const int& j, const int& k, const input& in, const ub_info &ubh) {
+static bool would_violate_c(const int& i, const int& j, const int& k, const Input& in, const ub_info &ubh) {
   return !((ubh.usedVol[k] + in.v[j]) <= in.C[k] &&
            (ubh.usedVal[k] + in.p[j]) <= in.V[k] &&
            (ubh.usedTime[k] + ((in.d.at(int_pair(i,j)) / in.M[k]) + in.T[k])) <= in.J[k]);
 }
 
-static void add_package(const int& i, const int& j, const int& k, const input& in, ub_info& ubh) {
+static void add_package(const int& i, const int& j, const int& k, const Input& in, ub_info& ubh) {
   ubh.graph[k].add_arc(i, j);
   ubh.usedVal[k] += in.p[j];
   ubh.usedVol[k] += in.v[j];
@@ -23,7 +23,7 @@ static void add_package(const int& i, const int& j, const int& k, const input& i
   ubh.out[i] = true;
 }
 
-static bool fill_graphs_with_fixed(node_ptr leaf, const input& in, ub_info& ubh, const int& n) {
+static bool fill_graphs_with_fixed(node_ptr leaf, const Input& in, ub_info& ubh, const int& n) {
   while (leaf->parent != nullptr) {
     int i = leaf->i(), j = leaf->j(), k = leaf->k();
 
@@ -51,7 +51,7 @@ static vector<int> get_sources(const Graph& g, const int& n) {
   return srcs;
 }
 
-static int best_next_source(vector<int>& srcs, const int& from, const input& in, const ub_info& ubh, const int& k) {
+static int best_next_source(vector<int>& srcs, const int& from, const Input& in, const ub_info& ubh, const int& k) {
   double min_dist = MAX_D;
   int w_index = -1;
 
@@ -69,7 +69,7 @@ static int best_next_source(vector<int>& srcs, const int& from, const input& in,
   return w_index;
 }
 
-static bool make_graphs_paths(ub_info& ubh, const input& in, const int& n, const int& m) {
+static bool make_graphs_paths(ub_info& ubh, const Input& in, const int& n, const int& m) {
   for (int k = 0; k < m; k++) {
     vector<int> srcs = get_sources(ubh.graph[k], n);
     int v = 0;
@@ -90,7 +90,7 @@ static bool make_graphs_paths(ub_info& ubh, const input& in, const int& n, const
   return true;
 }
 
-static int best_vehicle(const int& deliver, ub_info& ubh, const input& in, const int& n, const int& m) {
+static int best_vehicle(const int& deliver, ub_info& ubh, const Input& in, const int& n, const int& m) {
   double min_dist = MAX_D;
   int chosen_k = -1;
 
@@ -111,7 +111,7 @@ static int best_vehicle(const int& deliver, ub_info& ubh, const input& in, const
   return chosen_k;
 }
 
-static bool deliver_remaining(ub_info& ubh, const input& in, const int& n, const int& m) {
+static bool deliver_remaining(ub_info& ubh, const Input& in, const int& n, const int& m) {
   for (int j = 1; j <= n; j++) {
     if (!ubh.in[j]) {
       int k = best_vehicle(j, ubh, in, n, m);
@@ -141,7 +141,7 @@ static vector<triple> graphs_to_solution(ub_info& ubh, const int& m) {
   return sol;
 }
 
-static double solution_to_value(const vector<triple>& sol, const input& in, const int& n, const int& m) {
+static double solution_to_value(const vector<triple>& sol, const Input& in, const int& n, const int& m) {
   double total = 0.0;
   vector<bool> used = vector<bool>(m);
   fill(used.begin(), used.end(), false);
@@ -168,7 +168,7 @@ static double solution_to_value(const vector<triple>& sol, const input& in, cons
   return total;
 }
 
-pair<double,vector<triple>> upper_bound(node_ptr current, const input& in) {
+pair<double,vector<triple>> upper_bound(node_ptr current, const Input& in) {
   int n = current->n, m = current->m;
   ub_info ubh = ub_info(n, m);
 
@@ -205,7 +205,7 @@ vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m,
   return g.tour();
 }
 
-void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
   for (int k = 0; k < m; k++) {
     set<int> S;
 

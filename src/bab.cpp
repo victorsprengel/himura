@@ -88,7 +88,7 @@ static void solve_and_branch(Container &col , GRBModel& mdl, x_vars& x, const in
                              const int& m, const vector<set<int>>& reach, 
                              const vector<set<int>>& reached,
                              double& GUB, vector<triple>& sol, bool print,
-                             const input& in) {
+                             const Input& in) {
   static int it = 0;
   node_ptr current = col.top();
   col.pop();
@@ -146,14 +146,13 @@ static void solve_and_branch(Container &col , GRBModel& mdl, x_vars& x, const in
 double branch_and_bound(GRBModel& mdl, x_vars& x, const int& n, const int& m, 
                         vector<triple>& sol, const vector<set<int>>& reach,
                         const vector<set<int>>& reached,
-                        const input& in) {
+                        const Input& in) {
 
   double GUB = MAX_D;
   auto comparator = [](const node_ptr l, const node_ptr r) { return l->LLB > r->LLB; };
   priority_queue<node_ptr, vector<node_ptr>, decltype(comparator)> pq(comparator);
   pq.push(make_shared<Node>(n, m, -1, nullptr, -1, 0.0));
 
-  cout << "Branch & Bound" << endl;
   while (!pq.empty() && pq.top()->LLB < GUB) {
     solve_and_branch(pq, mdl, x, n, m, reach, reached, GUB, sol, true, in);
   }

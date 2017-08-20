@@ -1,7 +1,6 @@
 #ifndef BAB_H
 #define BAB_H
 #include <stack>
-#include <iostream>
 #include <limits>
 #include <queue>
 #include <set>
@@ -18,7 +17,7 @@ using y_vars = vector<GRBVar>;
 using triple = tuple<int,int,int>;
 using node_ptr = shared_ptr<Node>;
 
-double branch_and_bound(GRBModel& mdl, x_vars& x, const int& n, const int& m, vector<triple>& sol, const vector<set<int>>& reach, const vector<set<int>>& reached, const input& in);
+double branch_and_bound(GRBModel& mdl, x_vars& x, const int& n, const int& m, vector<triple>& sol, const vector<set<int>>& reach, const vector<set<int>>& reached, const Input& in);
 
 #endif
 

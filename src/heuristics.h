@@ -22,9 +22,9 @@ using node_ptr = shared_ptr<Node>;
 
 vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m, const vector<set<int>>& reach);
 
-pair<double,vector<triple>> upper_bound(node_ptr current, const input& in);
+pair<double,vector<triple>> upper_bound(node_ptr current, const Input& in);
 
-void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const input& in, const vector<set<int>>& reach, const vector<set<int>>& reached);
+void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached);
 
 #endif
 

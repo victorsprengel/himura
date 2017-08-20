@@ -5,7 +5,11 @@ static vector<string> split(string s, char c) {
   size_t i;
   while (s.size() > 0) {
     i = s.find(c);
-    r.push_back(s.substr(0, i));
+    string entry = s.substr(0, i);
+
+    if (entry.size()) {
+      r.push_back(entry);
+    }
 
     if (i == string::npos) {
       s.clear();
@@ -16,35 +20,37 @@ static vector<string> split(string s, char c) {
   return r;
 }
 
-void input::read(char *inVehicles, char *inDeliveries, int& n, int& m) {
+Input::Input(char *inVehicles, char *inDeliveries, int& n, int& m) {
   m = 0;
   ifstream inV(inVehicles);
   string line;
 
   while (getline(inV, line)) {
-    vector<string> s_line = split(line, ' ');
-    int qt = stoi(s_line[0]);
+    vector<string> sp = split(line, ' ');
+    int qt = stoi(sp[0]);
     m += qt;
     for (int i = 0; i < qt; i++) {
-      C.push_back(stod(s_line[1]));
-      V.push_back(stod(s_line[2]));
-      M.push_back(stod(s_line[3]));
-      H.push_back(stod(s_line[4]));
-      F.push_back(stod(s_line[5]));
-      E.push_back(stod(s_line[6]));
-      S.push_back(stod(s_line[7]));
-      T.push_back(stod(s_line[8]));
-      J.push_back(stod(s_line[9]));
+      C.push_back(stod(sp[1]));
+      V.push_back(stod(sp[2]));
+      M.push_back(stod(sp[3]));
+      H.push_back(stod(sp[4]));
+      F.push_back(stod(sp[5]));
+      E.push_back(stod(sp[6]));
+      S.push_back(stod(sp[7]));
+      T.push_back(stod(sp[8]));
+      J.push_back(stod(sp[9]));
     }
   }
 
-  n = -1; /* primeiro é o CO */
+  n = -1; /* 0 is depot */
   ifstream inD(inDeliveries);
-  vector<float> lat, lon;
+  vector<double> lat, lon;
 
   while (getline(inD, line)) {
-    if (line[0] == '#')
+    if (line[0] == '#') {
       continue;
+    }
+
     n++;
     vector<string> sp = split(line, ',');
     lat.push_back(stod(sp[0]));
@@ -53,27 +59,19 @@ void input::read(char *inVehicles, char *inDeliveries, int& n, int& m) {
     v.push_back(stod(sp[3]));
   }
 
-  cout << "n = " << n << "    m = " << m << endl;
-  double max_dist = 0.0;
-
   for (int i = 0; i <= n; i++) {
-    for (int j = 1; j <= n + 1; j++) {
-      if (i >= j)
-        continue;
-      if (j == n + 1)
-        d[pii(i,j)] = 0;
-      else {
-        d[pii(i,j)] = distance(lat[i], lon[i], lat[j], lon[j]);
-        if (d[pii(i,j)] > max_dist)
-          max_dist = d[pii(i,j)];
-        if (i > 0)
-          d[pii(j,i)] = d[pii(i,j)];
+    for (int j = i+1; j <= n + 1; j++) {
+
+      if (j == n + 1) {
+        d[pair<int,int>(i,j)] = 0;
+      } else {
+        d[pair<int,int>(i,j)] = distance(lat[i], lon[i], lat[j], lon[j]);
+
+        if (i > 0) {
+          d[pair<int,int>(j,i)] = d[pair<int,int>(i,j)];
+        }
       }
     }
   }
-  cout << "maximum distance between two points: " << max_dist << "km" << endl;
 }
 
-input::input() {
-
-}

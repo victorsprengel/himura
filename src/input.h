@@ -5,14 +5,12 @@
 #include "gurobi_c++.h"
 #include "dist.h"
 using namespace std;
-using pii = pair<int,int>;
 
-class input {
+class Input {
  public:
   vector<double> C, V, M, H, F, E, S, T, J, v, p;
-  map<pii,double> d;
-  input();
-  void read(char *inVehicles, char *inDeliveries, int& n, int& m);
+  map<pair<int,int>,double> d;
+  Input(char *inVehicles, char *inDeliveries, int& n, int& m);
 };
 
 #endif

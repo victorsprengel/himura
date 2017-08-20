@@ -1,6 +1,6 @@
 #include "presolve.h"
 
-vector<set<int>> get_reach(const input& in, const int& n) { 
+vector<set<int>> get_reach(const Input& in, const int& n) { 
   vector<set<int>> reach;
   reach.emplace_back();
 
@@ -52,7 +52,7 @@ vector<set<int>> get_reached(const vector<set<int>>& reach, const int& n) {
   return reached;
 }
 
-void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, const input& in, const int& n) {
+void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, const Input& in, const int& n) {
   vector<tuple<int, int, double>> edges;
 
   for (int i = 1; i <= n; i++)

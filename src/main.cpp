@@ -8,7 +8,7 @@
 #define MAX_D std::numeric_limits<double>::max()
 using namespace std;
 
-static x_vars init_x(const int& n, const int& m, GRBModel& mdl, const input& in, const vector<set<int>>& reach) {
+static x_vars init_x(const int& n, const int& m, GRBModel& mdl, const Input& in, const vector<set<int>>& reach) {
   x_vars x = x_vars(n+1);
   for (int i = 0; i <= n; i++) {
     x[i] = vector<vector<GRBVar>>(n+2);
@@ -18,14 +18,14 @@ static x_vars init_x(const int& n, const int& m, GRBModel& mdl, const input& in,
         if (j == n+1)
           x[i][j][k] = mdl.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS);
         else
-          x[i][j][k] = mdl.addVar(0.0, 1.0, (in.E[k] + in.F[k]*in.d.at(pii(i,j)) + (in.H[k]*(in.T[k] + (in.d.at(pii(i,j)) / in.M[k])))), GRB_CONTINUOUS);
+          x[i][j][k] = mdl.addVar(0.0, 1.0, (in.E[k] + in.F[k]*in.d.at(pair<int,int>(i,j)) + (in.H[k]*(in.T[k] + (in.d.at(pair<int,int>(i,j)) / in.M[k])))), GRB_CONTINUOUS);
       }
     }
   }
   return x;
 }
 
-static y_vars init_y(const int& m, GRBModel& mdl, const input& in) {
+static y_vars init_y(const int& m, GRBModel& mdl, const Input& in) {
   y_vars y = y_vars(m);
   for (int k = 0; k < m; k++) {
     y[k] = mdl.addVar(0.0, 1.0, in.S[k], GRB_CONTINUOUS);
@@ -33,7 +33,7 @@ static y_vars init_y(const int& m, GRBModel& mdl, const input& in) {
   return y;
 }
 
-static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, const int& m, const input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
   for (int j = 1; j <= n; j++) {
     GRBLinExpr e = 0.0;
     for (int i : reached[j])
@@ -103,7 +103,7 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
       for (int j : reach[i]) {
         if (j == n+1)
           continue;
-        e += (x[i][j][k] * (in.T[k] + (in.d.at(pii(i,j)) / in.M[k])));
+        e += (x[i][j][k] * (in.T[k] + (in.d.at(pair<int,int>(i,j)) / in.M[k])));
       }
     }
     mdl.addConstr(e, GRB_LESS_EQUAL, in.J[k]);
@@ -115,7 +115,7 @@ static void print_solution(const vector<triple>& sol) {
     cout << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << ")" << endl;
 }
 
-static void assert_optimal_solution(const vector<triple>& sol, const int& n, const int& m, const input& in, const double& optVal) {
+static void assert_optimal_solution(const vector<triple>& sol, const int& n, const int& m, const Input& in, const double& optVal) {
   for (int j = 1; j <= n; j++) {
     int delivered = 0;
     for (triple t : sol)
@@ -206,14 +206,15 @@ static void assert_optimal_solution(const vector<triple>& sol, const int& n, con
 
 int main(int argc, char** argv) {
   if (argc != 3) {
-    cout << "./router vehicles packages" << endl;
+    cout << "./router vehicle.data package.data" << endl;
     return 1;
   }
 
   srand(time(NULL));
-  input in = input();
   int n, m;
-  in.read(argv[1], argv[2], n, m);
+  Input in = Input(argv[1], argv[2], n, m);
+  cout << "n = " << n << "    m = " << m << endl;
+
   vector<set<int>> reach = get_reach(in, n);
   vector<set<int>> reached = get_reached(reach, n);
   increment_with_mst(reach, reached, in, n);
@@ -229,9 +230,10 @@ int main(int argc, char** argv) {
 
     vector<triple> solution;
     double optimal_value =  branch_and_bound(mdl, x, n, m, solution, reach, reached, in);
-    cout << "valor ótimo: " << optimal_value << endl;
+    cout << "optimal value: " << optimal_value << endl;
+
     if (abs(MAX_D - optimal_value) > 1e8) {
-      print_solution(solution);
+      //print_solution(solution);
       assert_optimal_solution(solution, n, m, in, optimal_value);
     }
   } catch (GRBException e) {

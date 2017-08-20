@@ -10,11 +10,11 @@
 using namespace std;
 using int_pair = pair<int,int>;
 
-vector<set<int>> get_reach(const input& in, const int& n);
+vector<set<int>> get_reach(const Input& in, const int& n);
 
 vector<set<int>> get_reached(const vector<set<int>>& reach, const int& n);
 
-void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, const input& in, const int& n);
+void increment_with_mst(vector<set<int>>& reach, vector<set<int>>& reached, const Input& in, const int& n);
 
 #endif
 
