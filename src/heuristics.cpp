@@ -24,12 +24,10 @@ static void add_package(const int& i, const int& j, const int& k, const input& i
 }
 
 static bool fill_graphs_with_fixed(node_ptr leaf, const input& in, ub_info& ubh, const int& n) {
-  node_ptr current = leaf, parent;
+  while (leaf->parent != nullptr) {
+    int i = leaf->i(), j = leaf->j(), k = leaf->k();
 
-  while ((parent = current->parent) != nullptr) {
-    int i = parent->i(), j = parent->j(), k = parent->k();
-
-    if (current->fixed_value) {
+    if (leaf->fixed_value) {
       if ((ubh.out[i] && i != 0) || (ubh.in[j] && j != n+1))
         return false;
 
@@ -40,7 +38,7 @@ static bool fill_graphs_with_fixed(node_ptr leaf, const input& in, ub_info& ubh,
     } else {
       ubh.blocked[k].push_back(int_pair(i, j));
     }
-    current = parent;
+    leaf = leaf->parent;
   }
   return true;
 }
@@ -204,8 +202,7 @@ vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m,
         g.add_arc(i, j);
     }
   }
-  vector<int> cycle = g.tour();
-  return cycle;
+  return g.tour();
 }
 
 void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
