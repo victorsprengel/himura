@@ -2,7 +2,7 @@ CXX=g++
 CPPFLAGS=-g -O2 -std=c++14 -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wunreachable-code -Wpedantic -Wold-style-cast -Wcast-align -Wmissing-include-dirs -Wredundant-decls -L./lib
 LIBS=-lgurobi70 -lgurobi_c++
 
-router: build/main.o build/bab.o build/dist.o build/graph.o build/heuristics.o build/input.o build/node.o build/presolve.o build/uf.o build/ub_helper.o
+bin/router: build/main.o build/bab.o build/dist.o build/graph.o build/heuristics.o build/input.o build/node.o build/presolve.o build/uf.o build/ub_helper.o
 	$(CXX) $(CPPFLAGS) $^ -o bin/router $(LIBS)
 
 build/main.o: src/main.cpp src/input.h src/presolve.h src/bab.h src/graph.h src/gurobi_c++.h
@@ -38,8 +38,8 @@ build/ub_helper.o: src/ub_helper.cpp src/ub_helper.h src/graph.h
 clean:
 	rm -f build/* bin/*
 
-test: router
+test: bin/router
 	./bin/router vehicles.data packages.data
 
-testout: router
+testout: bin/router
 	./bin/router vehicles.data packages.data > out
