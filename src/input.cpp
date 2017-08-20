@@ -47,10 +47,10 @@ void input::read(char *inVehicles, char *inDeliveries, int& n, int& m) {
       continue;
     n++;
     vector<string> sp = split(line, ',');
-    lon.push_back(stod(sp[0]));
-    lat.push_back(stod(sp[1]));
-    p.push_back(stod(sp[3]));
-    v.push_back(stod(sp[5]));
+    lat.push_back(stod(sp[0]));
+    lon.push_back(stod(sp[1]));
+    p.push_back(stod(sp[2]));
+    v.push_back(stod(sp[3]));
   }
 
   cout << "n = " << n << "    m = " << m << endl;
