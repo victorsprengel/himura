@@ -10,7 +10,7 @@
 #include "gurobi_c++.h"
 #include "heuristics.h"
 #define MAX_D std::numeric_limits<double>::max()
-#define PRINT_FREQ 100
+#define PRINT_FREQ 2
 using namespace std;
 using x_vars = vector<vector<vector<GRBVar>>>;
 using y_vars = vector<GRBVar>;

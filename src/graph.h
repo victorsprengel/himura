@@ -14,6 +14,7 @@ class Graph {
    vector<int> indeg, outdeg;
    Graph(int _n);
    void add_arc(int from, int to);
+   void add_edge(const pair<int,int>& edge);
    vector<int> tour(void);
    int sink(int v);
    vector<int_pair> all_arcs(); 

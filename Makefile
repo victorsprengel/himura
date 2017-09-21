@@ -2,7 +2,7 @@ CXX=g++
 CPPFLAGS=-g -O2 -std=c++14 -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wunreachable-code -Wpedantic -Wold-style-cast -Wcast-align -Wmissing-include-dirs -Wredundant-decls -L./lib
 LIBS=-lgurobi70 -lgurobi_c++
 
-bin/router: build/main.o build/bab.o build/dist.o build/graph.o build/heuristics.o build/input.o build/node.o build/presolve.o build/uf.o build/ub_helper.o
+bin/router: build/main.o build/bab.o build/dist.o build/graph.o build/heuristics.o build/input.o build/node.o build/presolve.o build/uf.o build/ll_node.o
 	$(CXX) $(CPPFLAGS) $^ -o bin/router $(LIBS)
 
 build/main.o: src/main.cpp src/input.h src/presolve.h src/bab.h src/graph.h src/gurobi_c++.h
@@ -17,7 +17,7 @@ build/dist.o: src/dist.cpp src/dist.h
 build/graph.o: src/graph.cpp src/graph.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
-build/heuristics.o: src/heuristics.cpp src/heuristics.h src/graph.h src/node.h src/gurobi_c++.h src/ub_helper.h src/input.h
+build/heuristics.o: src/heuristics.cpp src/heuristics.h src/graph.h src/node.h src/gurobi_c++.h src/input.h src/ll_node.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 build/input.o: src/input.cpp src/input.h src/dist.h src/gurobi_c++.h
@@ -32,7 +32,7 @@ build/presolve.o: src/presolve.cpp src/presolve.h src/uf.h src/input.h
 build/uf.o: src/uf.cpp src/uf.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
-build/ub_helper.o: src/ub_helper.cpp src/ub_helper.h src/graph.h
+build/ll_node.o: src/ll_node.cpp src/ll_node.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 clean:

@@ -94,7 +94,7 @@ static void solve_and_branch(Container &col , GRBModel& mdl, x_vars& x, const in
   col.pop();
   fix_vars(current, x);
 
-  if (print && (it % PRINT_FREQ) == 1)
+  if (print && ((it - 1) % PRINT_FREQ) == 0)
     cout << "GLB = " << current->LLB << "    GUB = " << GUB << "    Gap: " << ((GUB / current->LLB) - 1.0) << "    (it = " << it << ")" << endl;
   it++;
 

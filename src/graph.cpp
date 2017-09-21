@@ -18,6 +18,11 @@ void Graph::add_arc(int from, int to) {
   first[from] = m++;
 }
 
+void Graph::add_edge(const pair<int,int>& edge) {
+  add_arc(edge.first, edge.second);
+  add_arc(edge.second, edge.first);
+}
+
 int Graph::sink(int v) {
   while (first[v] != -1) {
     v = arcs[first[v]];
@@ -83,3 +88,5 @@ vector<int_pair> Graph::all_arcs() {
       all.push_back(int_pair(i,arcs[e]));
   return all;
 }
+
+

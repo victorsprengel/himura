@@ -1,196 +1,5 @@
 #include "heuristics.h"
 
-static bool contains(const vector<pair<int,int>>& v, const pair<int,int>& q) {
-  return find(v.begin(), v.end(), q) != v.end();
-}
-
-static bool violates_c(const int& k, const Input& in, const ub_info& ubh) {
-  return !(ubh.usedVol[k] <= in.C[k] && ubh.usedVal[k] <= in.V[k] && ubh.usedTime[k] <= in.J[k]);
-}
-
-static bool would_violate_c(const int& i, const int& j, const int& k, const Input& in, const ub_info &ubh) {
-  return !((ubh.usedVol[k] + in.v[j]) <= in.C[k] &&
-           (ubh.usedVal[k] + in.p[j]) <= in.V[k] &&
-           (ubh.usedTime[k] + ((in.d.at(int_pair(i,j)) / in.M[k]) + in.T[k])) <= in.J[k]);
-}
-
-static void add_package(const int& i, const int& j, const int& k, const Input& in, ub_info& ubh) {
-  ubh.graph[k].add_arc(i, j);
-  ubh.usedVal[k] += in.p[j];
-  ubh.usedVol[k] += in.v[j];
-  ubh.usedTime[k] += ((in.d.at(int_pair(i,j)) / in.M[k]) + in.T[k]);
-  ubh.in[j] = true;
-  ubh.out[i] = true;
-}
-
-static bool fill_graphs_with_fixed(node_ptr leaf, const Input& in, ub_info& ubh, const int& n) {
-  while (leaf->parent != nullptr) {
-    int i = leaf->i(), j = leaf->j(), k = leaf->k();
-
-    if (leaf->fixed_value) {
-      if ((ubh.out[i] && i != 0) || (ubh.in[j] && j != n+1))
-        return false;
-
-      add_package(i, j, k, in, ubh);
-
-      if (violates_c(k, in, ubh))
-        return false;
-    } else {
-      ubh.blocked[k].push_back(int_pair(i, j));
-    }
-    leaf = leaf->parent;
-  }
-  return true;
-}
-
-static vector<int> get_sources(const Graph& g, const int& n) {
-  vector<int> srcs;
-  for (int i = 1; i <= n; i++)
-    if (!g.indeg[i] && g.outdeg[i])
-      srcs.push_back(i);
-  return srcs;
-}
-
-static int best_next_source(vector<int>& srcs, const int& from, const Input& in, const ub_info& ubh, const int& k) {
-  double min_dist = MAX_D;
-  int w_index = -1;
-
-  for (size_t i = 0; i < srcs.size(); i++) {
-    bool closer = in.d.at(int_pair(from,srcs[i])) < min_dist;
-    bool not_blocked = !contains(ubh.blocked[k], int_pair(from,srcs[i]));
-    bool fits = !would_violate_c(from, srcs[i], k, in, ubh);
-
-    if (closer && not_blocked && fits) {
-      w_index = i;
-      min_dist = in.d.at(int_pair(from,srcs[i]));
-    }
-  }
-
-  return w_index;
-}
-
-static bool make_graphs_paths(ub_info& ubh, const Input& in, const int& n, const int& m) {
-  for (int k = 0; k < m; k++) {
-    vector<int> srcs = get_sources(ubh.graph[k], n);
-    int v = 0;
-    while (!(srcs.empty())) {
-      v = ubh.graph[k].sink(v);
-      if (v == n+1)
-        return false;
-
-      int w_index = best_next_source(srcs, v, in, ubh, k);
-      if (w_index == -1)
-        return false;
-
-      int w = srcs[w_index];
-      srcs.erase(srcs.begin() + w_index);
-      add_package(v, w, k, in, ubh);
-    }
-  }
-  return true;
-}
-
-static int best_vehicle(const int& deliver, ub_info& ubh, const Input& in, const int& n, const int& m) {
-  double min_dist = MAX_D;
-  int chosen_k = -1;
-
-  for (int k = 0; k < m; k++) {
-    int previous_stop = ubh.graph[k].sink(0);
-    if (previous_stop == n+1)
-      continue;
-
-    bool closer = in.d.at(int_pair(previous_stop,deliver)) < min_dist;
-    bool not_blocked = !contains(ubh.blocked[k], int_pair(previous_stop,deliver));
-    bool fits = !would_violate_c(previous_stop, deliver, k, in, ubh);
-    if (closer && not_blocked && fits) {
-      min_dist = in.d.at(int_pair(previous_stop, deliver));
-      chosen_k = k;
-    }
-  }
-
-  return chosen_k;
-}
-
-static bool deliver_remaining(ub_info& ubh, const Input& in, const int& n, const int& m) {
-  for (int j = 1; j <= n; j++) {
-    if (!ubh.in[j]) {
-      int k = best_vehicle(j, ubh, in, n, m);
-      if (k == -1)
-        return false;
-
-      /* TODO sink sendo feito 2x */
-      add_package(ubh.graph[k].sink(0), j, k, in, ubh);
-    }
-  }
-  return true;
-}
-
-static void go_to_sink(ub_info& ubh, const int& n, const int& m) {
-  for (int k = 0; k < m; k++) {
-    int last = ubh.graph[k].sink(0);
-    if (last != n+1)
-      ubh.graph[k].add_arc(last, n+1);
-  }
-}
-
-static vector<triple> graphs_to_solution(ub_info& ubh, const int& m) {
-  vector<triple> sol;
-  for (int k = 0; k < m; k++)
-    for (int_pair arc : ubh.graph[k].all_arcs())
-      sol.push_back(make_tuple(arc.first, arc.second, k));
-  return sol;
-}
-
-static double solution_to_value(const vector<triple>& sol, const Input& in, const int& n, const int& m) {
-  double total = 0.0;
-  vector<bool> used = vector<bool>(m);
-  fill(used.begin(), used.end(), false);
-
-  for (triple t : sol) {
-    int i = get<0>(t);
-    int j = get<1>(t);
-    int k = get<2>(t);
-
-    if (j == n+1)
-      continue;
-
-    used[k] = true;
-    total += ((in.H[k] * in.T[k]) + 
-              (in.H[k] * (in.d.at(int_pair(i,j)) / in.M[k])) + 
-              (in.E[k]) + 
-              (in.F[k] * in.d.at(int_pair(i,j))));
-  }
-  
-  for (int k = 0; k < m; k++)
-    if (used[k])
-      total += in.S[k];
-
-  return total;
-}
-
-pair<double,vector<triple>> upper_bound(node_ptr current, const Input& in) {
-  int n = current->n, m = current->m;
-  ub_info ubh = ub_info(n, m);
-
-  if (!fill_graphs_with_fixed(current, in, ubh, n)) {
-    return pair<double,vector<triple>>(MAX_D, vector<triple>());
-  }
-
-  if (!make_graphs_paths(ubh, in, n, m)) {
-    return pair<double,vector<triple>>(MAX_D, vector<triple>());
-  }
-
-  if (!deliver_remaining(ubh, in, n , m)) {
-    return pair<double,vector<triple>>(MAX_D, vector<triple>());
-  }
-
-  go_to_sink(ubh, n, m);
-  vector<triple> solution = graphs_to_solution(ubh, m);
-  double total = solution_to_value(solution, in, n, m);
-
-  return pair<double,vector<triple>>(total, solution);
-}
-
 vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m, const vector<set<int>>& reach) {
   Graph g = Graph(n+2);
   for (int i = 0; i <= n; i++) {
@@ -233,6 +42,245 @@ void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m
       }
       model.addConstr(e, GRB_LESS_EQUAL, S.size() - 1);
     }
+  }
+}
+
+static vector<set<int>> next_neighbour(node_ptr& current, const Input& in) {
+  int n = current->n, m = current->m;
+
+  vector<set<int>> partition = vector<set<int>>(m);
+
+  vector<int> vehicles;
+  for (int k = 0; k < m; k++) {
+    vehicles.push_back(k);
+    //partition.push_back(set<int>());
+  }
+
+  sort(vehicles.begin(), vehicles.end(),
+      [&](const int& a, const int& b) -> bool {return in.S[a] < in.S[b];});
+
+  vector<bool> visited = vector<bool>(n+1);
+  fill(visited.begin(), visited.end(), false);
+
+  for (int k : vehicles) {
+    int i = 0;
+    visited[i] = true;
+    partition[k].insert(i);
+    double used_val = 0.0, used_vol = 0.0, used_time = 0.0;
+
+    for ( ; ; ) {
+      int next_deliver = -1;
+      double min_dist = MAX_D;
+
+      for (int j = 1; j <= n; j++) {
+        if (!visited[j] && 
+            min_dist > in.d.at(pair<int,int>(i,j)) &&
+            used_val + in.p[j] <= in.V[k] &&
+            used_vol + in.v[j] <= in.C[k] &&
+            used_time + in.T[k] + (in.d.at(pair<int,int>(i,j)) / in.M[k]) <= in.J[k]) {
+
+          next_deliver = j;
+          min_dist = in.d.at(pair<int,int>(i,j));
+        }
+      }
+
+      if (next_deliver == -1) {
+        break;
+      }
+
+      used_val += in.p[next_deliver];
+      used_vol += in.v[next_deliver];
+      used_time += (in.T[k] + (in.d.at(pair<int,int>(i,next_deliver)) / in.M[k]));
+      visited[next_deliver] = true;
+      i = next_deliver;
+      partition[k].insert(next_deliver);
+    }
+  }
+
+  for (int i = 1; i <= n; i++) {
+    if (!visited[i]) {
+      throw 1;
+    }
+  }
+
+  return partition;
+}
+
+static set<pair<int, int>> mst_of_partition(const int& n, const Input& in) {
+  vector<tuple<int,int,double>> edges;
+  set<pair<int,int>> mst;
+
+  for (int i = 0; i <= n; i++) {
+    for (int j = i+1; j <= n; j++) {
+      edges.push_back(make_tuple(i, j, in.d.at(int_pair(i, j)))); /* simetrico */
+    }
+  }
+
+  sort(edges.begin(), edges.end(), 
+      [](const tuple<int,int,double>& a, const tuple<int,int,double>& b) {
+      return get<2>(a) < get<2>(b);
+      });
+
+  UnionFind uf = UnionFind(n+1);
+
+  for (tuple<int,int,double> edge : edges) {
+    int i = get<0>(edge);
+    int j = get<1>(edge);
+
+    if (uf.find(i) == uf.find(j)) {
+      continue;
+    }
+
+    mst.insert(pair<int,int>(i, j));
+    uf.join(i, j);
+  }
+
+  return mst;
+}
+
+static set<int> odd_degree_vertices(const set<pair<int,int>>& mst, const int& n) {
+  set<int> O;
+  vector<int> deg = vector<int>(n+1);
+  fill(deg.begin(), deg.end(), 0);
+
+  for (pair<int,int> edge : mst) {
+    deg[edge.first]++;
+    deg[edge.second]++;
+  }
+
+  for (int i = 0; i <= n; i++) {
+    if (deg[i] % 2 == 1) {
+      O.insert(i);
+    }
+  }
+
+  return O;
+}
+
+static set<pair<int,int>> greedy_min_weighted_perfect_matching(set<int>& odds, const Input& in) {
+  set<pair<int,int>> matching;
+  
+  while (!odds.empty()) {
+    int v = *(odds.begin());
+    odds.erase(v);
+    double length = MAX_D;
+    int closest;
+
+    for (int u : odds) {
+      if (in.d.at(pair<int,int>(v, u)) < length) {
+        length = in.d.at(pair<int,int>(v, u));
+        closest = u;
+      }
+    }
+    
+    matching.insert(pair<int,int>(closest, v));
+    odds.erase(closest);
+  }
+
+  return matching;
+}
+
+static vector<int> euler(vector<shared_ptr<LinkedListNode>>& adj) {
+  vector<int> circuit;
+  stack<int> stk;
+  int current = 0;
+
+  while (!stk.empty() || adj[current] != nullptr) {
+    if (adj[current] == nullptr) {
+      circuit.push_back(current);
+      current = stk.top();
+      stk.pop();
+    } else {
+      stk.push(current);
+      int neighbour = adj[current]->v;
+      adj[current] = adj[current]->next;
+      current = neighbour;
+    }
+  }
+
+  reverse(circuit.begin(), circuit.end());
+  return circuit;
+}
+
+static vector<int> hamilton(const vector<int>& eulerian_circuit, const int& n) {
+  vector<int> hamiltonian_circuit;
+  vector<bool> visited = vector<bool>(n+1);
+  fill(visited.begin(), visited.end(), false);
+
+  for (int vertex : eulerian_circuit) {
+    if (!visited[vertex]) {
+      hamiltonian_circuit.push_back(vertex);
+      visited[vertex] = true;
+    }
+  }
+
+  return hamiltonian_circuit;
+}
+
+static pair<double, vector<triple>> christofides(vector<set<int>> partitions, node_ptr& current, const Input& in) {
+  int n = current->n, m = current->m;
+  double total = 0;
+  vector<triple> sol;
+
+  for (int k = 0; k < m; k++) {
+    if (partitions[k].empty()) {
+      continue;
+    }
+
+    total += in.S[k];
+  
+    set<pair<int,int>> mst = mst_of_partition(n, in); 
+    set<int> O = odd_degree_vertices(mst, n);
+    set<pair<int,int>> matching = greedy_min_weighted_perfect_matching(O, in);
+
+    for (pair<int,int> edge : matching) {
+      mst.insert(edge);
+    }
+
+    vector<shared_ptr<LinkedListNode>> adj;
+    for (int i = 0; i <= n; i++) {
+      adj.push_back(nullptr);
+    }
+    for (pair<int,int> edge : mst) {
+      int u = edge.first, v = edge.second;
+
+      if (adj[u] == nullptr) {
+        LinkedListNode* new_node = new LinkedListNode();
+        new_node->v = v;
+        new_node->next = nullptr;
+        adj[u] = shared_ptr<LinkedListNode>(new_node);
+      } else {
+        adj[u]->insert(v);
+      }
+    }
+
+    vector<int> eulerian_circuit = euler(adj);
+    vector<int> hamiltonian_circuit = hamilton(eulerian_circuit, n);
+
+    for (size_t i = 0; i < hamiltonian_circuit.size() - 1; i++) {
+      int u = hamiltonian_circuit[i];
+      int v = hamiltonian_circuit[i+1];
+
+      if (u > v) {
+        int tmp = u;
+        u = v;
+        v = tmp;
+      }
+
+      total += (in.E[k] + in.F[k] * in.d.at(pair<int,int>(u,v)) + in.H[k] * (in.T[k] + in.d.at(pair<int,int>(u,v)) / in.M[k]));
+      sol.push_back(make_tuple(u,v,k));
+    }
+  }
+
+  return pair<double, vector<triple>>(total, sol);
+}
+
+pair<double, vector<triple>> upper_bound(node_ptr& current, const Input& in) {
+  try {
+    vector<set<int>> partitions = next_neighbour(current, in);
+    return christofides(partitions, current, in);
+  } catch (int exception) {
+    return pair<double,vector<triple>>(MAX_D, vector<triple>());
   }
 }
 

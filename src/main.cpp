@@ -110,11 +110,6 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
   }
 }
 
-static void print_solution(const vector<triple>& sol) {
-  for (triple t : sol)
-    cout << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << ")" << endl;
-}
-
 static void assert_optimal_solution(const vector<triple>& sol, const int& n, const int& m, const Input& in, const double& optVal) {
   for (int j = 1; j <= n; j++) {
     int delivered = 0;
@@ -230,7 +225,6 @@ int main(int argc, char** argv) {
     cout << "optimal value: " << optimal_value << endl;
 
     if (abs(MAX_D - optimal_value) > 1e8) {
-      //print_solution(solution);
       assert_optimal_solution(solution, n, m, in, optimal_value);
     }
   } catch (GRBException e) {
