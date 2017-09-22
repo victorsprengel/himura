@@ -12,6 +12,7 @@
 #include "input.h"
 #include "uf.h"
 #include "ll_node.h"
+#include "debug.h"
 #define MAX_D std::numeric_limits<double>::max()
 #define ALPHA 0.7
 #define BETA 0.5

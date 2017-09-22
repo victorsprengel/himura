@@ -48,12 +48,12 @@ void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m
 static vector<set<int>> next_neighbour(node_ptr& current, const Input& in) {
   int n = current->n, m = current->m;
 
-  vector<set<int>> partition = vector<set<int>>(m);
+  vector<set<int>> partition;
 
   vector<int> vehicles;
   for (int k = 0; k < m; k++) {
     vehicles.push_back(k);
-    //partition.push_back(set<int>());
+    partition.push_back(set<int>());
   }
 
   sort(vehicles.begin(), vehicles.end(),
@@ -106,12 +106,16 @@ static vector<set<int>> next_neighbour(node_ptr& current, const Input& in) {
   return partition;
 }
 
-static set<pair<int, int>> mst_of_partition(const int& n, const Input& in) {
+static set<pair<int, int>> mst_of_partition(const set<int>& partition, const int& n, const Input& in) {
   vector<tuple<int,int,double>> edges;
   set<pair<int,int>> mst;
 
-  for (int i = 0; i <= n; i++) {
-    for (int j = i+1; j <= n; j++) {
+  for (int i : partition) {
+    for (int j : partition) {
+      if (j <= i) {
+        continue;
+      }
+
       edges.push_back(make_tuple(i, j, in.d.at(int_pair(i, j)))); /* simetrico */
     }
   }
@@ -198,7 +202,6 @@ static vector<int> euler(vector<shared_ptr<LinkedListNode>>& adj) {
     }
   }
 
-  reverse(circuit.begin(), circuit.end());
   return circuit;
 }
 
@@ -217,22 +220,47 @@ static vector<int> hamilton(const vector<int>& eulerian_circuit, const int& n) {
   return hamiltonian_circuit;
 }
 
+static void two_opt(vector<int>& circuit, const Input& in) {
+  bool changed;
+
+  do {
+    changed = false;
+
+    for (size_t a = 0; a < circuit.size(); a++) {
+      for (size_t c = a+1; c < circuit.size(); c++) {
+        int b = a + 1 == circuit.size() ? 0 : a + 1;
+        int d = c + 1 == circuit.size() ? 0 : c + 1;
+
+        if (in.d.at(pair<int,int>(min(circuit[a],circuit[b]), max(circuit[a], circuit[b]))) + 
+            in.d.at(pair<int,int>(min(circuit[c],circuit[d]), max(circuit[c], circuit[d]))) > 
+            in.d.at(pair<int,int>(min(circuit[a],circuit[c]), max(circuit[a], circuit[c]))) +
+            in.d.at(pair<int,int>(min(circuit[b],circuit[d]), max(circuit[b], circuit[d])))) { 
+
+          int tmp = circuit[b];
+          circuit[b] = circuit[c];
+          circuit[c] = tmp;
+          changed = true;
+        }
+      }
+    }
+  } while (changed);
+}
+
 static pair<double, vector<triple>> christofides(vector<set<int>> partitions, node_ptr& current, const Input& in) {
   int n = current->n, m = current->m;
   double total = 0;
   vector<triple> sol;
 
   for (int k = 0; k < m; k++) {
-    if (partitions[k].empty()) {
+    if (partitions[k].size() <= 1) {
       continue;
     }
 
     total += in.S[k];
   
-    set<pair<int,int>> mst = mst_of_partition(n, in); 
+    set<pair<int,int>> mst = mst_of_partition(partitions[k], n, in); 
     set<int> O = odd_degree_vertices(mst, n);
     set<pair<int,int>> matching = greedy_min_weighted_perfect_matching(O, in);
-
     for (pair<int,int> edge : matching) {
       mst.insert(edge);
     }
@@ -252,26 +280,39 @@ static pair<double, vector<triple>> christofides(vector<set<int>> partitions, no
       } else {
         adj[u]->insert(v);
       }
+
+      if (adj[v] == nullptr) {
+        LinkedListNode* new_node = new LinkedListNode();
+        new_node->v = u;
+        new_node->next = nullptr;
+        adj[v] = shared_ptr<LinkedListNode>(new_node);
+      } else {
+        adj[v]->insert(u);
+      }
     }
 
     vector<int> eulerian_circuit = euler(adj);
+
     vector<int> hamiltonian_circuit = hamilton(eulerian_circuit, n);
+    
+    two_opt(hamiltonian_circuit, in);
+    hamiltonian_circuit.push_back(n+1);
 
     for (size_t i = 0; i < hamiltonian_circuit.size() - 1; i++) {
       int u = hamiltonian_circuit[i];
       int v = hamiltonian_circuit[i+1];
 
-      if (u > v) {
-        int tmp = u;
-        u = v;
-        v = tmp;
-      }
-
-      total += (in.E[k] + in.F[k] * in.d.at(pair<int,int>(u,v)) + in.H[k] * (in.T[k] + in.d.at(pair<int,int>(u,v)) / in.M[k]));
       sol.push_back(make_tuple(u,v,k));
+
+      if (v == n+1) {
+        continue;
+      }
+      
+      total += (in.E[k] + in.F[k] * in.d.at(pair<int,int>(u,v)) + in.H[k] * (in.T[k] + in.d.at(pair<int,int>(u,v)) / in.M[k]));
     }
   }
 
+  assert_viable_solution(sol, n, m, in, total);
   return pair<double, vector<triple>>(total, sol);
 }
 
