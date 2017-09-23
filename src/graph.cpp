@@ -10,6 +10,20 @@ Graph::Graph(int _n) {
   }
 }
 
+Graph::Graph(int _n, const set<pair<int,int>>& edges) {
+  n = _n;
+  m = 0;
+  for (int i = 0; i < n; i++) {
+    indeg.push_back(0);
+    outdeg.push_back(0);
+    adj.push_back(nullptr);
+  }
+  for (pair<int,int> edge : edges) {
+    add_arc(edge.first, edge.second);
+    add_arc(edge.second, edge.first);
+  }
+}
+
 void Graph::add_arc(int from, int to) {
   LinkedListNode* new_node = new LinkedListNode();
   new_node->v = to;

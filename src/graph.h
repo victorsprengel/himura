@@ -3,6 +3,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <set>
 #include "ll_node.h" 
 using namespace std;
 using int_pair = pair<int,int>;
@@ -16,6 +17,7 @@ class Graph {
     vector<LinkedList> adj;
     vector<int> indeg, outdeg;
     Graph(int _n);
+    Graph(int _n, const set<pair<int,int>>& edges);
     void add_arc(int from, int to);
     vector<int> tour(void);
 };

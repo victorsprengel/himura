@@ -184,20 +184,20 @@ static set<pair<int,int>> greedy_min_weighted_perfect_matching(set<int>& odds, c
   return matching;
 }
 
-static vector<int> euler(vector<shared_ptr<LinkedListNode>>& adj) {
+static vector<int> euler(Graph& G) {
   vector<int> circuit;
   stack<int> stk;
   int current = 0;
 
-  while (!stk.empty() || adj[current] != nullptr) {
-    if (adj[current] == nullptr) {
+  while (!stk.empty() || G.adj[current] != nullptr) {
+    if (G.adj[current] == nullptr) {
       circuit.push_back(current);
       current = stk.top();
       stk.pop();
     } else {
       stk.push(current);
-      int neighbour = adj[current]->v;
-      adj[current] = adj[current]->next;
+      int neighbour = G.adj[current]->v;
+      G.adj[current] = G.adj[current]->next;
       current = neighbour;
     }
   }
@@ -265,33 +265,9 @@ static pair<double, vector<triple>> christofides(vector<set<int>> partitions, no
       mst.insert(edge);
     }
 
-    vector<shared_ptr<LinkedListNode>> adj;
-    for (int i = 0; i <= n; i++) {
-      adj.push_back(nullptr);
-    }
-    for (pair<int,int> edge : mst) {
-      int u = edge.first, v = edge.second;
+    Graph G = Graph(n+1, mst);
 
-      if (adj[u] == nullptr) {
-        LinkedListNode* new_node = new LinkedListNode();
-        new_node->v = v;
-        new_node->next = nullptr;
-        adj[u] = shared_ptr<LinkedListNode>(new_node);
-      } else {
-        adj[u]->insert(v);
-      }
-
-      if (adj[v] == nullptr) {
-        LinkedListNode* new_node = new LinkedListNode();
-        new_node->v = u;
-        new_node->next = nullptr;
-        adj[v] = shared_ptr<LinkedListNode>(new_node);
-      } else {
-        adj[v]->insert(u);
-      }
-    }
-
-    vector<int> eulerian_circuit = euler(adj);
+    vector<int> eulerian_circuit = euler(G);
 
     vector<int> hamiltonian_circuit = hamilton(eulerian_circuit, n);
     
