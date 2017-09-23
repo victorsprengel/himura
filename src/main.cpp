@@ -33,7 +33,7 @@ static y_vars init_y(const int& m, GRBModel& mdl, const Input& in) {
   return y;
 }
 
-static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+static void every_package_has_to_be_delivered_by_exactly_one_vehicle(GRBModel& mdl, x_vars& x, const int& n, const int& m, const vector<set<int>>& reached) {
   for (int j = 1; j <= n; j++) {
     GRBLinExpr e = 0.0;
     for (int i : reached[j])
@@ -41,7 +41,9 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
         e += x[i][j][k];
     mdl.addConstr(e, GRB_EQUAL, 1.0);
   }
+}
 
+static void every_vehicle_has_to_obey_its_volume_capacity(GRBModel& mdl, x_vars& x, const int& n, const int& m, const Input& in, const vector<set<int>>& reach) {
   for (int k = 0; k < m; k++) {
     GRBLinExpr e = 0.0;
     for (int i = 0; i <= n; i++) {
@@ -53,7 +55,9 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
     }
     mdl.addConstr(e, GRB_LESS_EQUAL, in.C[k]);
   }
+}
 
+static void every_vehicle_has_to_obey_its_value_capacity(GRBModel& mdl, x_vars& x, const int& n, const int& m, const Input& in, const vector<set<int>>& reach) {
   for (int k = 0; k < m; k++) {
     GRBLinExpr e = 0.0;
     for (int i = 0; i <= n; i++) {
@@ -65,7 +69,9 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
     }
     mdl.addConstr(e, GRB_LESS_EQUAL, in.V[k]);
   }
+}
 
+static void the_number_of_vehicles_arriving_at_one_delivery_is_the_same_as_the_number_leaving(GRBModel& mdl, x_vars& x, const int& n, const int& m, const vector<set<int>>& reach, const vector<set<int>>& reached) {
   for (int k = 0; k < m; k++) {
     for (int i = 1; i <= n; i++) {
       GRBLinExpr eLeft = 0.0, eRight = 0.0;
@@ -79,14 +85,18 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
       mdl.addConstr(eLeft, GRB_EQUAL, eRight);
     }
   }
+}
 
+static void every_vehicle_leaving_the_depot_has_to_be_used(GRBModel& mdl, x_vars& x, y_vars& y, const int& m, const vector<set<int>>& reach) {
   for (int k = 0; k < m; k++) {
     GRBLinExpr e = 0.0;
     for (int j : reach[0])
       e += x[0][j][k];
     mdl.addConstr(y[k], GRB_EQUAL, e);
   }
+}
 
+static void every_vehicle_that_delivered_something_has_to_be_used(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, const int& m, const vector<set<int>>& reach) {
   for (int k = 0; k < m; k++) {
     for (int i = 0; i <= n; i++) {
       for (int j : reach[i]) {
@@ -96,7 +106,9 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
       }
     }
   }
+}
 
+static void every_vehicle_has_to_respect_working_hours(GRBModel& mdl, x_vars& x, const int& n, const int& m, const Input& in, const vector<set<int>>& reach) {
   for (int k = 0; k < m; k++) {
     GRBLinExpr e = 0.0;
     for (int i = 0; i <= n; i++) {
@@ -110,6 +122,15 @@ static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, c
   }
 }
 
+static void add_constraints(GRBModel& mdl, x_vars& x, y_vars& y, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+  every_package_has_to_be_delivered_by_exactly_one_vehicle(mdl, x, n, m, reached);
+  every_vehicle_has_to_obey_its_volume_capacity(mdl, x, n, m, in, reach);
+  every_vehicle_has_to_obey_its_value_capacity(mdl, x, n, m, in, reach);
+  the_number_of_vehicles_arriving_at_one_delivery_is_the_same_as_the_number_leaving(mdl, x, n, m, reach, reached);
+  every_vehicle_leaving_the_depot_has_to_be_used(mdl, x, y, m, reach);
+  every_vehicle_that_delivered_something_has_to_be_used(mdl, x, y, n, m, reach);
+  every_vehicle_has_to_respect_working_hours(mdl, x, n, m, in, reach);
+}
 
 int main(int argc, char** argv) {
   if (argc != 3) {
