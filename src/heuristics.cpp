@@ -161,24 +161,32 @@ static set<int> odd_degree_vertices(const set<pair<int,int>>& mst, const int& n)
   return O;
 }
 
-static set<pair<int,int>> greedy_min_weighted_perfect_matching(set<int>& odds, const Input& in) {
+static set<pair<int,int>> greedy_min_weighted_perfect_matching(set<int>& odds, const map<pair<int,int>,double>& dist) {
   set<pair<int,int>> matching;
   
   while (!odds.empty()) {
-    int v = *(odds.begin());
-    odds.erase(v);
-    double length = MAX_D;
-    int closest;
+    double best_edge_cost = MAX_D;
+    pair<int,int> best_edge;
 
     for (int u : odds) {
-      if (in.d.at(pair<int,int>(v, u)) < length) {
-        length = in.d.at(pair<int,int>(v, u));
-        closest = u;
+      for (int v : odds) {
+        if (v <= u) {
+          continue;
+        }
+
+        pair<int,int> edge = pair<int,int>(u, v);
+        double edge_cost = dist.at(edge);
+
+        if (edge_cost < best_edge_cost) {
+          best_edge_cost = edge_cost;
+          best_edge = edge;
+        }
       }
     }
-    
-    matching.insert(pair<int,int>(closest, v));
-    odds.erase(closest);
+
+    odds.erase(best_edge.first);
+    odds.erase(best_edge.second);
+    matching.insert(best_edge);
   }
 
   return matching;
@@ -260,7 +268,7 @@ static pair<double, vector<triple>> christofides(vector<set<int>> partitions, no
   
     set<pair<int,int>> mst = mst_of_partition(partitions[k], n, in); 
     set<int> O = odd_degree_vertices(mst, n);
-    set<pair<int,int>> matching = greedy_min_weighted_perfect_matching(O, in);
+    set<pair<int,int>> matching = greedy_min_weighted_perfect_matching(O, in.d);
     for (pair<int,int> edge : matching) {
       mst.insert(edge);
     }
