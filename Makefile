@@ -14,7 +14,7 @@ build/bab.o: src/bab.cpp src/bab.h src/input.h src/node.h src/graph.h src/gurobi
 build/dist.o: src/dist.cpp src/dist.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
-build/graph.o: src/graph.cpp src/graph.h
+build/graph.o: src/graph.cpp src/graph.h src/ll_node.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 build/heuristics.o: src/heuristics.cpp src/heuristics.h src/graph.h src/node.h src/gurobi_c++.h src/input.h src/ll_node.h src/debug.h

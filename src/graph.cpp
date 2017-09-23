@@ -4,30 +4,17 @@ Graph::Graph(int _n) {
   n = _n;
   m = 0;
   for (int i = 0; i < n; i++) {
-    first.push_back(-1);
     indeg.push_back(0);
     outdeg.push_back(0);
+    adj.push_back(nullptr);
   }
 }
 
 void Graph::add_arc(int from, int to) {
-  indeg[to]++;
-  outdeg[from]++;
-  arcs.push_back(to);
-  next.push_back(first[from]);
-  first[from] = m++;
-}
-
-void Graph::add_edge(const pair<int,int>& edge) {
-  add_arc(edge.first, edge.second);
-  add_arc(edge.second, edge.first);
-}
-
-int Graph::sink(int v) {
-  while (first[v] != -1) {
-    v = arcs[first[v]];
-  }
-  return v;
+  LinkedListNode* new_node = new LinkedListNode();
+  new_node->v = to;
+  new_node->next = adj[from];
+  adj[from] = shared_ptr<LinkedListNode>(new_node);
 }
 
 vector<int> Graph::tour(void) {
@@ -61,9 +48,12 @@ int Graph::dfs_cycle(int v, vector<int>& pre, vector<int>& post, vector<int>& pa
   pre[v] = precount++;
   vector<int> eds;
 
-  for (int e = first[v]; e != -1; e = next[e]) {
-    eds.push_back(arcs[e]);
+  shared_ptr<LinkedListNode> current = adj[v];
+  while (current != nullptr) {
+    eds.push_back(current->v);
+    current = current->next;
   }
+
   random_shuffle(eds.begin(), eds.end());
 
   for (int w : eds) {
@@ -80,13 +70,4 @@ int Graph::dfs_cycle(int v, vector<int>& pre, vector<int>& post, vector<int>& pa
   post[v] = postcount++;
   return -1;
 }
-
-vector<int_pair> Graph::all_arcs() {
-  vector<int_pair> all;
-  for (int i = 0; i < n; i++)
-    for (int e = first[i]; e != -1; e = next[e])
-      all.push_back(int_pair(i,arcs[e]));
-  return all;
-}
-
 
