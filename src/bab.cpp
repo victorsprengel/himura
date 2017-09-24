@@ -92,6 +92,41 @@ static void update_solution(
   //return blocked;
 //}
 
+static double solution_cost(
+    const Solution& sol, 
+    const Input& in) {
+
+  double total = 0.0;
+  vector<bool> used = vector<bool>(in.m);
+  fill(used.begin(), used.end(), false);
+  
+
+  for (int_triple t : sol) {
+    Delivery i = get<0>(t);
+    Delivery j = get<1>(t);
+    Vehicle k = get<2>(t);
+
+    if (j == in.n + 1) {
+      continue;
+    }
+
+    total += (in.H[k] * in.T[k] + 
+              in.E[k] +
+              (in.H[k] * (in.d.at(int_pair(i,j)) / in.M[k])) +
+              in.F[k] * in.d.at(int_pair(i,j)));
+
+    used[k] = true;
+  }
+
+  for (Vehicle k = 0; k < in.m; k++) {
+    if (used[k]) {
+      total += in.S[k];
+    }
+  }
+
+  return total;
+}
+
 template<typename Container>
 static void solve_and_branch(
     Container &col, 
@@ -181,5 +216,7 @@ Solution branch_and_bound(
     solve_and_branch(pq, mdl, x, reach, reached, GUB, sol, in);
   }
 
+  cout << "opt: " << solution_cost(sol, in) << endl;
+  assert_viable_solution(sol, in, solution_cost(sol, in));
   return sol;
 }

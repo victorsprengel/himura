@@ -5,7 +5,7 @@ LIBS=-lgurobi70 -lgurobi_c++
 bin/router: build/main.o build/input.o build/presolve.o build/dist.o build/dist.o build/graph.o build/ll_node.o build/uf.o build/gurobi_interface.o build/bab.o build/debug.o build/node.o build/subtour_elimination.o
 	$(CXX) $(CPPFLAGS) $^ -o bin/router $(LIBS)
 
-build/main.o: src/main.cpp src/defs.h src/input.h src/presolve.h src/gurobi_interface.h src/debug.h
+build/main.o: src/main.cpp src/defs.h src/input.h src/presolve.h src/gurobi_interface.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 build/input.o: src/input.cpp src/input.h src/dist.h
@@ -29,7 +29,7 @@ build/uf.o: src/uf.cpp src/uf.h src/defs.h
 build/gurobi_interface.o: src/gurobi_interface.cpp src/gurobi_interface.h src/defs.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
-build/bab.o: src/bab.cpp src/bab.h src/defs.h src/node.h src/graph.h src/subtour_elimination.h
+build/bab.o: src/bab.cpp src/bab.h src/defs.h src/node.h src/graph.h src/subtour_elimination.h src/debug.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 build/node.o: src/node.cpp src/node.h src/defs.h
