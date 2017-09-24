@@ -1,13 +1,8 @@
 #ifndef GRAPH_H
 #define GRAPH_H
-#include <vector>
-#include <stack>
-#include <algorithm>
-#include <set>
 #include "ll_node.h" 
-using namespace std;
-using int_pair = pair<int,int>;
-using LinkedList = shared_ptr<LinkedListNode>;
+#include "uf.h"
+#include "defs.h"
 
 class Graph {
   private:
@@ -20,6 +15,8 @@ class Graph {
     Graph(int _n, const set<pair<int,int>>& edges);
     void add_arc(int from, int to);
     vector<int> tour(void);
+    vector<Edge> all_edges(void);
+    vector<Edge> mst(const function<bool (const Edge& a, const Edge& b)>& comparator);
 };
 
 #endif

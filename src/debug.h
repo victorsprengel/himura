@@ -2,10 +2,8 @@
 #define DEBUG_H_
 #include "input.h"
 #include "graph.h"
-#include <vector>
-using namespace std;
-using triple = tuple<int, int, int>;
+#include "defs.h"
 
-void assert_viable_solution(const vector<triple>& sol, const int& n, const int& m, const Input& in, const double& expected_val);
+void assert_viable_solution(const Solution& sol, const Input& in, const double& expected_val);
 
 #endif

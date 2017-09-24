@@ -1,7 +1,6 @@
 #ifndef UF_H_
 #define UF_H_
-#include <vector>
-using namespace std;
+#include "defs.h"
 
 class UnionFind {
   private:

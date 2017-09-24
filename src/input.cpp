@@ -20,7 +20,7 @@ static vector<string> split(string s, char c) {
   return r;
 }
 
-Input::Input(char *inVehicles, char *inDeliveries, int& n, int& m) {
+Input::Input(char *inVehicles, char *inDeliveries) {
   m = 0;
   ifstream inV(inVehicles);
   string line;

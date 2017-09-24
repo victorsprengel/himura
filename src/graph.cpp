@@ -32,19 +32,20 @@ void Graph::add_arc(int from, int to) {
 }
 
 vector<int> Graph::tour(void) {
-  vector<int> pre, post, parent, c;
+  vector<int> pre = vector<int>(n);
+  vector<int> post = vector<int>(n);
+  vector<int> parent = vector<int>(n);
+  vector<int> c;
+  
+  fill(pre.begin(), pre.end(), -1);
+  fill(post.begin(), post.end(), -1);
+  fill(parent.begin(), parent.end(), -1);
   int possibleCycle, precount = 0, postcount = 0;
 
-  for (int i = 0; i < n; i++) {
-    pre.push_back(-1);
-    post.push_back(-1);
-    parent.push_back(-1);
-  }
-
-  for (int v = 0; v < Graph::n; v++) {
+  for (int v = 0; v < n; v++) {
     if (pre[v] == -1) {
       parent[v] = v;
-      if ((possibleCycle = Graph::dfs_cycle(v, pre, post, parent, precount, postcount)) != -1) {
+      if ((possibleCycle = dfs_cycle(v, pre, post, parent, precount, postcount)) != -1) {
         int start = possibleCycle;
         do {
           c.push_back(possibleCycle);
@@ -58,11 +59,18 @@ vector<int> Graph::tour(void) {
   return c;
 }
 
-int Graph::dfs_cycle(int v, vector<int>& pre, vector<int>& post, vector<int>& parent, int& precount, int& postcount) {
+int Graph::dfs_cycle(
+    int v, 
+    vector<int>& pre, 
+    vector<int>& post, 
+    vector<int>& parent, 
+    int& precount, 
+    int& postcount) {
+
   pre[v] = precount++;
   vector<int> eds;
 
-  shared_ptr<LinkedListNode> current = adj[v];
+  LLNode current = adj[v];
   while (current != nullptr) {
     eds.push_back(current->v);
     current = current->next;
@@ -74,8 +82,9 @@ int Graph::dfs_cycle(int v, vector<int>& pre, vector<int>& post, vector<int>& pa
     if (pre[w] == -1) {
       parent[w] = v;
       int possibleCycle = Graph::dfs_cycle(w, pre, post, parent, precount, postcount);
-      if (possibleCycle != -1)
+      if (possibleCycle != -1) {
         return possibleCycle;
+      }
     } else if (pre[v] > pre[w] && post[w] == -1) {
       parent[w] = v;
       return v;
@@ -85,3 +94,41 @@ int Graph::dfs_cycle(int v, vector<int>& pre, vector<int>& post, vector<int>& pa
   return -1;
 }
 
+vector<Edge> Graph::all_edges(void) {
+  vector<Edge> edges;
+
+  for (int i = 0; i < n; i++) {
+    LLNode current = adj[i];
+    while (current != nullptr) {
+      if (current->v > i) {
+        edges.push_back(Edge(i, current->v));
+      }
+      current = current->next;
+    }
+  }
+
+  return edges;
+}
+
+vector<Edge> Graph::mst(
+    const function<bool (const Edge& a, const Edge& b)>& comparator) {
+
+  vector<Edge> edges = all_edges(), mst_edges;
+
+  sort(edges.begin(), edges.end(), comparator);
+
+  UnionFind uf = UnionFind(n);
+
+  for (Edge e : edges) {
+    int i = e.first;
+    int j = e.second;
+
+    if (uf.find(i) == uf.find(j))
+      continue;
+
+    mst_edges.push_back(e);
+    uf.join(i, j);
+  }
+
+  return mst_edges;
+}

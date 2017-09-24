@@ -1,16 +1,12 @@
 #ifndef PRESOLVE_H
 #define PRESOLVE_H
-#include <set>
-#include <limits>
-#include <algorithm>
 #include "input.h"
-#include "uf.h"
-#define GAMMA 5
-#define MAX_D std::numeric_limits<double>::max()
-using namespace std;
-using int_pair = pair<int,int>;
+#include "defs.h"
+#include "graph.h"
 
-pair<vector<set<int>>, vector<set<int>>> allowed_variables(const Input& in, const int& n);
+vector<Partition> find_reach(const Input& in);
+
+vector<Partition> reached_from_reach(const vector<Partition>& reach, const int& n);
 
 #endif
 

@@ -1,8 +1,6 @@
 #ifndef LL_NODE_H
 #define LL_NODE_H
-#include <memory>
-using namespace std;
-using int_pair = pair<int,int>;
+#include "defs.h"
 
 class LinkedListNode {
   public:
@@ -10,5 +8,8 @@ class LinkedListNode {
     shared_ptr<LinkedListNode> next;
     void insert(int new_v);
 };
+
+using LinkedList = shared_ptr<LinkedListNode>;
+using LLNode = shared_ptr<LinkedListNode>;
 
 #endif

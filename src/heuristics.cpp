@@ -1,6 +1,6 @@
 #include "heuristics.h"
 
-vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m, const vector<set<int>>& reach) {
+vector<int> subtour_elimination_heuristic(n3_var& x, const int& n, const int& m, const vector<set<int>>& reach) {
   Graph g = Graph(n+2);
   for (int i = 0; i <= n; i++) {
     for (int j : reach[i]) {
@@ -14,7 +14,8 @@ vector<int> subtour_elimination_heuristic(x_vars& x, const int& n, const int& m,
   return g.tour();
 }
 
-void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+void covering_constraints(n3_var& x, GRBModel& model, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
+  int n = in.n, m = in.m;
   for (int k = 0; k < m; k++) {
     set<int> S;
 
@@ -45,8 +46,8 @@ void covering_constraints(x_vars& x, GRBModel& model, const int& n, const int& m
   }
 }
 
-static vector<set<int>> next_neighbour(node_ptr& current, const Input& in) {
-  int n = current->n, m = current->m;
+static vector<set<int>> next_neighbour(const Input& in) {
+  int n = in.n, m = in.m;
 
   vector<set<int>> partition;
 
@@ -254,10 +255,15 @@ static void two_opt(vector<int>& circuit, const Input& in) {
   } while (changed);
 }
 
-static pair<double, vector<triple>> christofides(vector<set<int>> partitions, node_ptr& current, const Input& in) {
-  int n = current->n, m = current->m;
+static pair<double, Solution> christofides(
+    vector<Partition> partitions, 
+    const vector<int_triple>& used, 
+    const vector<int_triple>& blocked, 
+    const Input& in) {
+
+  int n = in.n, m = in.m;
   double total = 0;
-  vector<triple> sol;
+  Solution sol;
 
   for (int k = 0; k < m; k++) {
     if (partitions[k].size() <= 1) {
@@ -272,13 +278,9 @@ static pair<double, vector<triple>> christofides(vector<set<int>> partitions, no
     for (pair<int,int> edge : matching) {
       mst.insert(edge);
     }
-
     Graph G = Graph(n+1, mst);
-
     vector<int> eulerian_circuit = euler(G);
-
     vector<int> hamiltonian_circuit = hamilton(eulerian_circuit, n);
-    
     two_opt(hamiltonian_circuit, in);
     hamiltonian_circuit.push_back(n+1);
 
@@ -296,16 +298,90 @@ static pair<double, vector<triple>> christofides(vector<set<int>> partitions, no
     }
   }
 
-  assert_viable_solution(sol, n, m, in, total);
-  return pair<double, vector<triple>>(total, sol);
+  assert_viable_solution(sol, in, total);
+  return pair<double, Solution>(total, sol);
 }
 
-pair<double, vector<triple>> upper_bound(node_ptr& current, const Input& in) {
+static vector<set<int>> kruskal_like_partitioning(const vector<int_triple>& used, const Input& in) {
+  int n = in.n, m = in.m;
+
+  vector<set<int>> partitions = vector<set<int>>(m); 
+  vector<bool> delivered = vector<bool>(n+2);
+  vector<double> usedVal = vector<double>(m), usedVol = vector<double>(m);
+
+  fill(delivered.begin(), delivered.end(), false);
+  fill(usedVol.begin(), usedVol.end(), 0.0);
+  fill(usedVal.begin(), usedVal.end(), 0.0);
+
+  for (set<int> partition : partitions) {
+    partition.insert(0);
+  }
+  
+  for (int_triple var : used) {
+    int i = get<0>(var);
+    int j = get<1>(var);
+    int k = get<2>(var);
+
+    if ((i != 0 && (delivered[i] || usedVal[k] + in.p[i] > in.V[k] || usedVol[k] + in.v[i] > in.C[k])) ||
+        (j != n+1 && (delivered[j] || usedVal[k] + in.p[j] > in.V[k] || usedVol[k] + in.v[j] > in.C[k]))) {
+      throw 1;
+    }
+
+    delivered[j] = true;
+    delivered[i] = true;
+
+    partitions[k].insert(i);
+    usedVal[k] += in.p[i];
+    usedVol[k] += in.v[i];
+    
+    if (j != n+1) {
+      partitions[k].insert(j);
+      usedVal[k] += in.p[j];
+      usedVol[k] += in.v[j];
+    }
+  }
+
+  vector<int> missing_deliveries;
+  for (int i = 1; i <= n; i++) {
+    missing_deliveries.push_back(i);
+  }
+  remove_if(missing_deliveries.begin(), missing_deliveries.end(),
+      [&](int i) { return delivered[i]; });
+
+  for (int j : missing_deliveries) {
+    int best_partition = -1;
+    double best_distance = MAX_D;
+
+    for (int k = 0; k < m; k++) {
+      for (int i : partitions[k]) {
+        double dist = in.d.at(pair<int,int>(i, j));
+
+        if (dist < best_distance && usedVol[k] + in.v[j] <= in.C[k] && usedVal[k] + in.p[j] <= in.V[k]) {
+          best_partition = k;
+          best_distance = dist;
+        }
+      }
+    }
+
+    if (best_partition == -1) {
+      throw 2;
+    }
+
+    partitions[best_partition].insert(j);
+    usedVal[best_partition] += in.p[j];
+    usedVol[best_partition] += in.v[j];
+    delivered[j] = true;
+  }
+
+  return partitions;
+}
+
+pair<double, Solution> upper_bound(const vector<int_triple>& used, const vector<int_triple>& blocked, const Input& in) {
   try {
-    vector<set<int>> partitions = next_neighbour(current, in);
-    return christofides(partitions, current, in);
+    vector<set<int>> partitions = next_neighbour(in);
+    return christofides(partitions, used, blocked, in);
   } catch (int exception) {
-    return pair<double,vector<triple>>(MAX_D, vector<triple>());
+    return pair<double,Solution>(MAX_D, Solution());
   }
 }
 

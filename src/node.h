@@ -1,12 +1,6 @@
 #ifndef NODE_H
 #define NODE_H
-#include <set>
-#include <vector>
-#include <algorithm>
-#include <cstddef>
-#include <memory>
-#include <deque>
-using namespace std;
+#include "defs.h"
 
 class Node {
   public:
@@ -18,9 +12,14 @@ class Node {
     int i();
     int j();
     int k();
+    bool has_children(void);
+    bool has_left_child(void);
+    bool has_right_child(void);
 };
 
-int child(shared_ptr<Node> leaf, const vector<set<int>>& reach);
+using node_ptr = shared_ptr<Node>;
+
+void spawn_children(shared_ptr<Node> leaf, const vector<set<int>>& reach);
 
 #endif
 

@@ -1,10 +1,15 @@
 #include "debug.h"
 
-void assert_viable_solution(const vector<triple>& sol, const int& n, const int& m, const Input& in, const double& expected_val) {
+void assert_viable_solution(
+    const Solution& sol, 
+    const Input& in, 
+    const double& expected_val) {
+
+  int n = in.n, m = in.m;
 
   for (int j = 1; j <= n; j++) {
     int delivered = 0;
-    for (triple t : sol)
+    for (int_triple t : sol)
       if (get<1>(t) == j)
         delivered++;
     assert(delivered == 1);
@@ -12,7 +17,7 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
 
   for (int k = 0; k < m; k++) {
     double vol = 0.0;
-    for (triple t : sol)
+    for (int_triple t : sol)
       if (get<2>(t) == k && get<1>(t) != n+1)
         vol += in.v[get<1>(t)];
     assert(vol <= in.C[k]);
@@ -21,7 +26,7 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
 
   for (int k = 0; k < m; k++) {
     double val = 0.0;
-    for (triple t : sol)
+    for (int_triple t : sol)
       if (get<2>(t) == k && get<1>(t) != n+1)
         val += in.p[get<1>(t)];
     assert(val <= in.V[k]);
@@ -30,7 +35,7 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
   for (int k = 0; k < m; k++) {
     for (int j = 1; j <= n; j++) {
       int got_in = 0, got_out = 0;
-      for (triple t : sol) {
+      for (int_triple t : sol) {
         if (get<2>(t) == k) {
           if (get<0>(t) == j) {
             got_out++;
@@ -46,7 +51,7 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
 
   for (int k = 0; k < m; k++) {
     double time = 0.0;
-    for (triple t : sol) {
+    for (int_triple t : sol) {
       if (get<2>(t) == k && get<1>(t) != n+1) {
         time += (in.T[k] + (in.d.at(int_pair(get<0>(t),get<1>(t))) / in.M[k]));
       }
@@ -56,7 +61,7 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
 
   for (int k = 0; k < m; k++) {
     Graph g = Graph(n+2);
-    for (triple t : sol)
+    for (int_triple t : sol)
       if (get<2>(t) == k)
         g.add_arc(get<0>(t), get<1>(t));
     vector<int> cycle = g.tour();
@@ -66,13 +71,13 @@ void assert_viable_solution(const vector<triple>& sol, const int& n, const int& 
   double solution = 0.0;
   for (int k = 0; k < m; k++) {
     bool used = false;
-    for (triple t : sol)
+    for (int_triple t : sol)
       if (get<2>(t) == k && get<1>(t) != n+1)
         used = true;
     if (used)
       solution += in.S[k];
   }
-  for (triple t : sol) {
+  for (int_triple t : sol) {
     int i = get<0>(t);
     int j = get<1>(t);
     int k = get<2>(t);
