@@ -5,14 +5,19 @@
 #include "bab.h"
 #include "debug.h"
 
-static void check_arguments(const int& argc) {
+static void check_arguments(
+    const int& argc) {
+
   if (argc != 3) {
     cout << "usage: ./router vehicle.data package.data" << endl;
     exit(0);
   }
 }
 
-static double solution_cost(const Solution& sol, const Input& in) {
+static double solution_cost(
+    const Solution& sol, 
+    const Input& in) {
+
   double total = 0.0;
   vector<bool> used = vector<bool>(in.m);
   fill(used.begin(), used.end(), false);

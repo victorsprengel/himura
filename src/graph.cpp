@@ -31,7 +31,7 @@ void Graph::add_arc(int from, int to) {
   adj[from] = shared_ptr<LinkedListNode>(new_node);
 }
 
-vector<int> Graph::tour(void) {
+vector<int> Graph::dicircuit(void) {
   vector<int> pre = vector<int>(n);
   vector<int> post = vector<int>(n);
   vector<int> parent = vector<int>(n);
@@ -45,7 +45,7 @@ vector<int> Graph::tour(void) {
   for (int v = 0; v < n; v++) {
     if (pre[v] == -1) {
       parent[v] = v;
-      if ((possibleCycle = dfs_cycle(v, pre, post, parent, precount, postcount)) != -1) {
+      if ((possibleCycle = dfs_circuit(v, pre, post, parent, precount, postcount)) != -1) {
         int start = possibleCycle;
         do {
           c.push_back(possibleCycle);
@@ -59,7 +59,7 @@ vector<int> Graph::tour(void) {
   return c;
 }
 
-int Graph::dfs_cycle(
+int Graph::dfs_circuit(
     int v, 
     vector<int>& pre, 
     vector<int>& post, 
@@ -81,7 +81,7 @@ int Graph::dfs_cycle(
   for (int w : eds) {
     if (pre[w] == -1) {
       parent[w] = v;
-      int possibleCycle = Graph::dfs_cycle(w, pre, post, parent, precount, postcount);
+      int possibleCycle = Graph::dfs_circuit(w, pre, post, parent, precount, postcount);
       if (possibleCycle != -1) {
         return possibleCycle;
       }

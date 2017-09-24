@@ -41,5 +41,9 @@ using n3_var = vector<vector<vector<GRBVar>>>;
 using n2_var = vector<vector<GRBVar>>;
 using n1_var = vector<GRBVar>;
 using Edge = int_pair;
+using Circuit = vector<int>;
+using Dicircuit = Circuit;
+using Vehicle = int;
+using Delivery = int;
 #endif
 

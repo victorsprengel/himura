@@ -64,7 +64,7 @@ void assert_viable_solution(
     for (int_triple t : sol)
       if (get<2>(t) == k)
         g.add_arc(get<0>(t), get<1>(t));
-    vector<int> cycle = g.tour();
+    vector<int> cycle = g.dicircuit();
     assert (cycle.size() == 0);
   }
 
