@@ -2,8 +2,9 @@
 #define BAB_H
 #include "defs.h"
 #include "node.h"
-#include "heuristics.h"
 #include "graph.h"
+#include "subtour_elimination.h"
+#include "input.h"
 
 Solution branch_and_bound(
     GRBModel& mdl, 

@@ -1,27 +1,5 @@
 #include "heuristics.h"
 
-/* Subtour Elimination Heuristic */
-Dicircuit probable_dicircuit(
-    n3_var& x, 
-    const int& n, 
-    const int& m, 
-    const vector<set<int>>& reach) {
-
-  Graph g = Graph(n+2);
-  for (int i = 0; i <= n; i++) {
-    for (int j : reach[i]) {
-      double sum = 0.0;
-      for (int k = 0; k < m; k++) {
-        sum += x[i][j][k].get(GRB_DoubleAttr_X);
-      }
-
-      if (sum > ALPHA) {
-        g.add_arc(i, j);
-      }
-    }
-  }
-  return g.dicircuit();
-}
 
 //void covering_constraints(n3_var& x, GRBModel& model, const Input& in, const vector<set<int>>& reach, const vector<set<int>>& reached) {
   //int n = in.n, m = in.m;
