@@ -6,6 +6,7 @@
 #include "subtour_elimination.h"
 #include "input.h"
 #include "debug.h"
+#include "ub.h"
 
 Solution branch_and_bound(
     GRBModel& mdl, 

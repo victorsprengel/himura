@@ -31,6 +31,9 @@
 #define TRUE 1
 #define FALSE 0
 #define PRINT TRUE
+#define FREE 0
+#define USED 1
+#define BLOCKED -1
 using namespace std;
 using int_pair = pair<int,int>;
 using int_triple = tuple<int,int,int>;
@@ -45,5 +48,10 @@ using Circuit = vector<int>;
 using Dicircuit = Circuit;
 using Vehicle = int;
 using Delivery = int;
+using n3_int = vector<vector<vector<int>>>;
+using n2_int = vector<vector<int>>;
+using n1_int = vector<int>;
+template<class T>
+using List = vector<T>;
 #endif
 

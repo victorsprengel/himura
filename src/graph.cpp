@@ -10,7 +10,7 @@ Graph::Graph(int _n) {
   }
 }
 
-Graph::Graph(int _n, const set<pair<int,int>>& edges) {
+Graph::Graph(int _n, const List<Edge>& edges) {
   n = _n;
   m = 0;
   for (int i = 0; i < n; i++) {
@@ -18,9 +18,9 @@ Graph::Graph(int _n, const set<pair<int,int>>& edges) {
     outdeg.push_back(0);
     adj.push_back(nullptr);
   }
-  for (pair<int,int> edge : edges) {
-    add_arc(edge.first, edge.second);
-    add_arc(edge.second, edge.first);
+  for (Edge e : edges) {
+    add_arc(e.first, e.second);
+    add_arc(e.second, e.first);
   }
 }
 
@@ -115,7 +115,7 @@ vector<Edge> Graph::mst(
 
   vector<Edge> edges = all_edges(), mst_edges;
 
-  sort(edges.begin(), edges.end(), comparator);
+  stable_sort(edges.begin(), edges.end(), comparator);
 
   UnionFind uf = UnionFind(n);
 

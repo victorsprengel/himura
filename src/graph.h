@@ -12,7 +12,7 @@ class Graph {
     vector<LinkedList> adj;
     vector<int> indeg, outdeg;
     Graph(int _n);
-    Graph(int _n, const set<pair<int,int>>& edges);
+    Graph(int _n, const List<Edge>& edges);
     void add_arc(int from, int to);
     vector<int> dicircuit(void);
     vector<Edge> all_edges(void);

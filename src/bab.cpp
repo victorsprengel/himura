@@ -50,47 +50,15 @@ static void update_solution(
 }
 
 
-//static void copy_solution(
-    //Solution& old_sol, 
-    //const Solution& new_sol) {
+static void copy_solution(
+    Solution& old_sol, 
+    const Solution& new_sol) {
 
-  //old_sol.clear();
-  //for (int_triple t : new_sol) {
-    //old_sol.push_back(t);
-  //}
-//}
-
-//static vector<int_triple> fixed_vars(
-    //node_ptr current) {
-
-  //vector<int_triple> fixed;
-
-  //while (current->parent != nullptr) {
-    //int_triple fixed_var = int_triple(current->i(), current->j(), current->k());
-
-    //if (current->fixed_value) {
-      //fixed.push_back(fixed_var);
-    //}
-  //}
-
-  //return fixed;
-//}
-
-//static vector<int_triple> blocked_vars(
-    //node_ptr current) {
-
-  //vector<int_triple> blocked;
-
-  //while (current->parent != nullptr) {
-    //int_triple fixed_var = int_triple(current->i(), current->j(), current->k());
-
-    //if (!(current->fixed_value)) {
-      //blocked.push_back(fixed_var);
-    //}
-  //}
-
-  //return blocked;
-//}
+  old_sol.clear();
+  for (int_triple t : new_sol) {
+    old_sol.push_back(t);
+  }
+}
 
 static double solution_cost(
     const Solution& sol, 
@@ -125,6 +93,22 @@ static double solution_cost(
   }
 
   return total;
+}
+
+static List<int_triple> get_fixed_vars(
+    node_ptr leaf,
+    const int& desired_fixed_value) {
+  
+  List<int_triple> fixed_vars;
+
+  while (leaf->parent != nullptr) {
+    if (leaf->fixed_value == desired_fixed_value) {
+      fixed_vars.push_back(int_triple(leaf->i(), leaf->j(), leaf->k()));
+    }
+    leaf = leaf->parent;
+  }
+
+  return fixed_vars;
 }
 
 template<typename Container>
@@ -166,12 +150,19 @@ static void solve_and_branch(
 
   current->LLB = max(current->LLB, mdl.get(GRB_DoubleAttr_ObjVal));
 
-  //pair<double,Solution> heuristic_solution = upper_bound(fixed_vars(current), blocked_vars(current), in);
-  //double LUB = heuristic_solution.first;
-  //if (LUB < GUB) {
-    //GUB = LUB;
-    //copy_solution(sol, heuristic_solution.second);
-  //}
+  List<int_triple> used = get_fixed_vars(current, 1);
+  List<int_triple> blocked = get_fixed_vars(current, 0);
+  try {
+    Solution new_sol = heuristic_solution(used, blocked, reach, in);
+    double LUB = solution_cost(new_sol, in);
+
+    if (LUB < GUB) {
+      GUB = LUB;
+      copy_solution(sol, new_sol);
+    }
+
+  } catch (int e) {
+  }
 
   if (current->LLB >= GUB) { 
     unfix_vars(current, x); return;
@@ -218,5 +209,6 @@ Solution branch_and_bound(
 
   cout << "opt: " << solution_cost(sol, in) << endl;
   assert_viable_solution(sol, in, solution_cost(sol, in));
+
   return sol;
 }
