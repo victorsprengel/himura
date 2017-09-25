@@ -34,7 +34,7 @@ static List<Partition> kruskal_like_partitioning(
     const List<int_triple>& used,
     const Input& in) {
 
-  List<Partition> assignments = List<Partition>(in.m);
+  List<Partition> assignments;
   vector<int> owner = vector<int>(in.n + 2);
   vector<double> usedVal = vector<double>(in.m), usedVol = vector<double>(in.m);
 
@@ -42,8 +42,9 @@ static List<Partition> kruskal_like_partitioning(
   fill(usedVol.begin(), usedVol.end(), 0.0);
   fill(usedVal.begin(), usedVal.end(), 0.0);
 
-  for (Partition p : assignments) {
-    p.insert(0);
+  for (Vehicle k = 0; k < in.m; k++) {
+    assignments.push_back(Partition());
+    assignments[k].insert(0);
   }
 
   for (int_triple fixed_var : used) {
@@ -292,7 +293,7 @@ static List<Delivery> christofides(
   List<Delivery> route;
 
   if (partition.size() <= 1) {
-    return route;
+    return List<Delivery>();
   }
 
   n3_int var_status = state_of_variables(in.n, in.m, used, blocked, reach);
@@ -344,6 +345,10 @@ Solution heuristic_solution(
 
   for (Vehicle k = 0; k < in.m; k++) {
     List<Delivery> tsp_solution = christofides(assignments[k], k, used, blocked, reach, in);
+
+    if (!tsp_solution.size()) {
+      continue;
+    }
 
     if (!is_viable_route(tsp_solution, in, k)) {
       throw 4;

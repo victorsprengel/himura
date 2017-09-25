@@ -17,10 +17,9 @@
 #define MAX_D std::numeric_limits<double>::max()
 #define pi 3.14159265358979323846
 #define R 6373
-#define GAMMA 5
+#define GAMMA 10
 #define ALPHA 0.7
 #define BETA 0.5
-#define PRINT_FREQ 10
 #define WORKING_HOURS_CONSTRAINT 0
 #define LEAVING_DEPOT_CONSTRAINT 1
 #define ANY_DELIVER_COMPLETED_CONSTRAINT 2

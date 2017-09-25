@@ -122,12 +122,14 @@ static void solve_and_branch(
     Solution& sol, 
     const Input& in) {
 
+  static int it = 0;
   node_ptr current = col.top();
   col.pop();
   fix_vars(current, x);
 
   if (PRINT) {
-    cout << "GLB = " << current->LLB << "    GUB = " << GUB << "    Gap: " << ((GUB - current->LLB) / current->LLB) << endl;
+    cout << "GLB = " << current->LLB << "    GUB = " << GUB << "    Gap: " << ((GUB - current->LLB) / current->LLB) << "    (it = " << it << ")" <<  endl;
+    it++;
   }
 
   if (fixed_vars_contain_cycle(current, in.n)) {
