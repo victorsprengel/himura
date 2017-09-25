@@ -33,7 +33,7 @@
 #define FREE 0
 #define USED 1
 #define BLOCKED -1
-#define TOLERANCE 1.3
+#define TOLERANCE 1.0
 using namespace std;
 using int_pair = pair<int,int>;
 using int_triple = tuple<int,int,int>;
