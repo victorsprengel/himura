@@ -33,6 +33,7 @@
 #define TRUE 1
 #define FALSE 0
 #define PRINT TRUE
+#define PRINT_UB_ERRORS FALSE
 #define FREE 0
 #define USED 1
 #define BLOCKED -1

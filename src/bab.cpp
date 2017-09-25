@@ -164,6 +164,19 @@ static void solve_and_branch(
     }
 
   } catch (int e) {
+    if (PRINT_UB_ERRORS) {
+      switch(e) {
+        case 1:
+          cout << "The fixed vars gave the same package to two different vehicles" << endl;
+          break;
+        case 2:
+          cout << "No partition was found that could deliver another package with its capacities" << endl;
+          break;
+        case 3:
+          cout << "Found tour by TSP heuristic and partitions did not respect working hours constraint" << endl;
+          break;
+      }
+    }
   }
 
   if (current->LLB >= GUB) { 
