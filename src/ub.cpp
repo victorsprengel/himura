@@ -48,15 +48,14 @@ static List<Partition> kruskal_like_partitioning(
   }
 
   for (int_triple fixed_var : used) {
-    int i = get<0>(fixed_var);
-    int j = get<1>(fixed_var);
-    int k = get<2>(fixed_var);
+    int i,j,k;
+    tie(i,j,k) = fixed_var;
 
     if ((i != 0 && owner[i] != -1 && owner[i] != k) ||
         (j != in.n + 1 && owner[j] != -1 && owner[j] != k) ||
         (i != 0 && owner[i] == -1 && (usedVal[k] + in.p[i] > in.V[k] || usedVol[k] + in.v[i] > in.C[k])) ||
         (j != in.n + 1 && owner[j] == -1 && (usedVal[k] + in.p[j] > in.V[k] || usedVol[k] + in.v[j] > in.C[k]))) {
-      throw 1;
+      throw FIXED_VARS_GIVE_SAME_PACKAGE_TO_TWO_DIFFERENT_VEHICLES;
     }
 
     if (i != 0 && owner[i] == -1) {
@@ -101,7 +100,7 @@ static List<Partition> kruskal_like_partitioning(
     }
 
     if (best_vehicle == -1) {
-      throw 2;
+      throw NO_PARTITION_CAN_FIT_ANOTHER_PACKAGE;
     }
 
     assignments[best_vehicle].insert(j);
@@ -135,25 +134,26 @@ static List<Edge> mst_of_partition(
   }
 
   return G.mst([&](const Edge& a, const Edge& b)
-      { if (reach[a.first].find(a.second) != reach[a.first].end()) {
-          if (var_status[a.first][a.second][k] == USED) {
-            return true;
-          } else if (var_status[a.first][a.second][k] == BLOCKED) {
-            return false;
+      { double cost_a = cost.at(a), cost_b = cost.at(b);
+        
+        if (reach[a.first].find(a.second) != reach[a.first].end()) {
+          if (var_status[a.first][a.second][k] == BLOCKED) {
+            cost_a = MAX_D;
+          } else if (var_status[a.first][a.second][k] == USED) {
+            cost_a = 0.0;
           }
         }
 
         if (reach[b.first].find(b.second) != reach[b.first].end()) {
-          if (var_status[b.first][b.second][k] == USED) {
-            return false;
-          } else if (var_status[b.first][b.second][k] == BLOCKED) {
-            return true;
+          if (var_status[b.first][b.second][k] == BLOCKED) {
+            cost_b = MAX_D;
+          } else if (var_status[b.first][b.second][k] == USED) {
+            cost_b = 0.0;
           }
         }
-      
-        return cost.at(a) < cost.at(b);
-      });
 
+        return cost_a < cost_b;
+      });
 }
 
 static set<Delivery> odd_degree_vertices(
@@ -198,18 +198,21 @@ static List<Edge> greedy_min_weighted_perfect_matching (
         }
 
         Edge e = Edge(u, v);
+        double edge_cost = cost.at(e);
 
-        if (!(reach[u].find(v) != reach[u].end() && var_status[u][v][k] == BLOCKED) &&
-            ((reach[u].find(v) != reach[u].end() && var_status[u][v][k] == USED) ||
-             (cost.at(e) < best_edge_cost))){
-          best_edge_cost = cost.at(e);
+        if (reach[u].find(v) != reach[u].end()) {
+          if (var_status[u][v][k] == BLOCKED) {
+            edge_cost = MAX_D;
+          } else if (var_status[u][v][k] == USED) {
+            edge_cost = 0.0;
+          }
+        } 
+
+        if (abs(MAX_D - best_edge_cost) <= 1e-8 || edge_cost < best_edge_cost) {
+          best_edge_cost = edge_cost;
           best_edge = e;
         }
       }
-    }
-
-    if (abs(MAX_D - best_edge_cost) <= 1e-8) {
-      throw 3;
     }
 
     odds.erase(best_edge.first);
@@ -351,7 +354,7 @@ Solution heuristic_solution(
     }
 
     if (!is_viable_route(tsp_solution, in, k)) {
-      throw 4;
+      throw FOUND_TOUR_DOESNT_RESPECT_WORKING_HOURS;
     }
 
     tsp_solution.push_back(in.n + 1);
