@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
   srand(time(NULL));
 
   Input in = Input(argv[1], argv[2]);
+  cout << "n = " << in.n << "    m  = " << in.m << endl;
   vector<Partition> reach = find_reach(in);
   vector<Partition> reached = reached_from_reach(reach, in.n);
 

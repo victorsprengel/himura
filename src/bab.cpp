@@ -205,7 +205,7 @@ Solution branch_and_bound(
   pq.push(make_shared<Node>(in.n, in.m, -1, nullptr, -1, 0.0));
   Solution sol;
 
-  while (!pq.empty() && pq.top()->LLB < GUB) {
+  while (!pq.empty() && pq.top()->LLB * TOLERANCE < GUB) {
     solve_and_branch(pq, mdl, x, reach, reached, GUB, sol, in);
   }
 

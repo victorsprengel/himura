@@ -17,7 +17,7 @@
 #define MAX_D std::numeric_limits<double>::max()
 #define pi 3.14159265358979323846
 #define R 6373
-#define GAMMA 10
+#define GAMMA 5
 #define ALPHA 0.7
 #define BETA 0.5
 #define WORKING_HOURS_CONSTRAINT 0
@@ -33,6 +33,7 @@
 #define FREE 0
 #define USED 1
 #define BLOCKED -1
+#define TOLERANCE 1.3
 using namespace std;
 using int_pair = pair<int,int>;
 using int_triple = tuple<int,int,int>;
