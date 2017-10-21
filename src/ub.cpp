@@ -36,11 +36,12 @@ static List<Partition> kruskal_like_partitioning(
 
   List<Partition> assignments;
   vector<int> owner = vector<int>(in.n + 2);
-  vector<double> usedVal = vector<double>(in.m), usedVol = vector<double>(in.m);
+  vector<double> usedVal = vector<double>(in.m), usedVol = vector<double>(in.m), less_than_mst_cost = vector<double>(in.m);
 
   fill(owner.begin(), owner.end(), -1);
   fill(usedVol.begin(), usedVol.end(), 0.0);
   fill(usedVal.begin(), usedVal.end(), 0.0);
+  fill(less_than_mst_cost.begin(), less_than_mst_cost.end(), 0.0);
 
   for (Vehicle k = 0; k < in.m; k++) {
     assignments.push_back(Partition());
@@ -67,6 +68,7 @@ static List<Partition> kruskal_like_partitioning(
     assignments[k].insert(i);
 
     if (j != in.n + 1) {
+      less_than_mst_cost[k] += (in.T[k] + in.d.at(Edge(i, j)) / in.M[k]);
       if (owner[j] == -1) {
         usedVal[k] += in.p[j];
         usedVol[k] += in.v[j];
@@ -92,7 +94,10 @@ static List<Partition> kruskal_like_partitioning(
       for (Delivery i : assignments[k]) {
         double dist = in.d.at(int_pair(i, j));
 
-        if (dist < best_distance && usedVol[k] + in.v[j] <= in.C[k] && usedVal[k] + in.p[j] <= in.V[k]) {
+        if (dist < best_distance && 
+            usedVol[k] + in.v[j] <= in.C[k] && 
+            usedVal[k] + in.p[j] <= in.V[k] &&
+            (less_than_mst_cost[k] + (in.T[k] + dist / in.M[k])) * XI <= in.J[k]) {
           best_vehicle = k;
           best_distance = dist;
         }
@@ -107,6 +112,7 @@ static List<Partition> kruskal_like_partitioning(
     usedVol[best_vehicle] += in.v[j];
     usedVal[best_vehicle] += in.p[j];
     owner[j] = best_vehicle;
+    less_than_mst_cost[best_vehicle] += (in.T[best_vehicle] + best_distance / in.M[best_vehicle]);
   }
 
   return assignments;
