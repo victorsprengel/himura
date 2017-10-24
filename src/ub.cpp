@@ -267,19 +267,19 @@ static Dicircuit hamiltonian_from_eulerian(const Dicircuit& eulerian_circuit, co
 
 static void two_opt(Dicircuit& circuit, const Input& in) {
   bool changed;
-
+  
   do {
     changed = false;
 
-    for (size_t a = 0; a < circuit.size(); a++) {
-      for (size_t c = a+1; c < circuit.size(); c++) {
-        int b = a + 1 == circuit.size() ? 0 : a + 1;
-        int d = c + 1 == circuit.size() ? 0 : c + 1;
+    for (size_t a = 0; a + 1 < circuit.size(); a++) {
+      for (size_t c = a+1; c + 1 < circuit.size(); c++) {
+        int b = a + 1;
+        int d = c + 1;
 
-        if (in.d.at(pair<int,int>(min(circuit[a],circuit[b]), max(circuit[a], circuit[b]))) + 
-            in.d.at(pair<int,int>(min(circuit[c],circuit[d]), max(circuit[c], circuit[d]))) > 
-            in.d.at(pair<int,int>(min(circuit[a],circuit[c]), max(circuit[a], circuit[c]))) +
-            in.d.at(pair<int,int>(min(circuit[b],circuit[d]), max(circuit[b], circuit[d])))) { 
+        if (in.d.at(int_pair(min(circuit[a],circuit[b]), max(circuit[a], circuit[b]))) + 
+            in.d.at(int_pair(min(circuit[c],circuit[d]), max(circuit[c], circuit[d]))) > 
+            in.d.at(int_pair(min(circuit[a],circuit[c]), max(circuit[a], circuit[c]))) +
+            in.d.at(int_pair(min(circuit[b],circuit[d]), max(circuit[b], circuit[d])))) { 
 
           int tmp = circuit[b];
           circuit[b] = circuit[c];
@@ -288,6 +288,23 @@ static void two_opt(Dicircuit& circuit, const Input& in) {
         }
       }
     }
+
+    size_t n = circuit.size();
+    if (n < 3) {
+      continue;
+    }
+
+    if (in.d.at(int_pair(min(circuit[n-3], circuit[n-2]), max(circuit[n-3], circuit[n-2]))) +
+        in.d.at(int_pair(min(circuit[n-2], circuit[n-1]), max(circuit[n-2], circuit[n-1]))) >
+        in.d.at(int_pair(min(circuit[n-3], circuit[n-1]), max(circuit[n-3], circuit[n-1]))) +
+        in.d.at(int_pair(min(circuit[n-1], circuit[n-2]), max(circuit[n-1], circuit[n-2])))) {
+
+      int tmp = circuit[n-1];
+      circuit[n-1] = circuit[n-2];
+      circuit[n-2] = tmp;
+      changed = true;
+    }
+
   } while (changed);
 }
 
