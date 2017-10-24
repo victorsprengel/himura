@@ -60,8 +60,6 @@ void spawn_children(
     }
   }
 
-  return;
-
   for (int k = 0; k < m; k++) {
     for (int i = 0; i <= n; i++) {
       for (int j : reach[i]) {
