@@ -68,7 +68,7 @@ static List<Partition> kruskal_like_partitioning(
     assignments[k].insert(i);
 
     if (j != in.n + 1) {
-      less_than_mst_cost[k] += (in.T[k] + in.d.at(Edge(i, j)) / in.M[k]);
+      less_than_mst_cost[k] += (in.T[k] + in.d.at(Arc(i, j)) / in.M[k]);
       if (owner[j] == -1) {
         usedVal[k] += in.p[j];
         usedVol[k] += in.v[j];
@@ -265,47 +265,55 @@ static Dicircuit hamiltonian_from_eulerian(const Dicircuit& eulerian_circuit, co
   return hamiltonian_circuit;
 }
 
+static double tour_cost(const Dicircuit& circuit, const Input& in) {
+  double c = 0.0;
+
+  for (size_t i = 0; i + 1 < circuit.size(); i++) {
+    c += in.d.at(int_pair(min(circuit[i], circuit[i+1]), max(circuit[i], circuit[i+1])));  
+  }
+
+  return c;
+}
+
+static Dicircuit two_swap(const size_t& i, const size_t& k, const Dicircuit& circuit) {
+  Dicircuit new_circuit;
+
+  for (size_t j = 0; j < i; j++) {
+    new_circuit.push_back(circuit[j]);
+  }
+
+  for (size_t j = k; j >= i && j < circuit.size(); j--) {
+    new_circuit.push_back(circuit[j]);
+  }
+
+  for (size_t j = k + 1; j < circuit.size(); j++) {
+    new_circuit.push_back(circuit[j]);
+  }
+
+  return new_circuit;
+}
+
 static void two_opt(Dicircuit& circuit, const Input& in) {
-  bool changed;
-  
+  bool improved;
+  double best_known_cost = tour_cost(circuit, in);
+
   do {
-    changed = false;
+    improved = false;
 
-    for (size_t a = 0; a + 1 < circuit.size(); a++) {
-      for (size_t c = a+1; c + 1 < circuit.size(); c++) {
-        int b = a + 1;
-        int d = c + 1;
+    for (size_t i = 1; i + 1 < circuit.size(); i++) {
+      for (size_t k = i + 1; k < circuit.size(); k++) {
+        Dicircuit new_tour = two_swap(i, k, circuit);
+        double new_cost = tour_cost(new_tour, in);
 
-        if (in.d.at(int_pair(min(circuit[a],circuit[b]), max(circuit[a], circuit[b]))) + 
-            in.d.at(int_pair(min(circuit[c],circuit[d]), max(circuit[c], circuit[d]))) > 
-            in.d.at(int_pair(min(circuit[a],circuit[c]), max(circuit[a], circuit[c]))) +
-            in.d.at(int_pair(min(circuit[b],circuit[d]), max(circuit[b], circuit[d])))) { 
-
-          int tmp = circuit[b];
-          circuit[b] = circuit[c];
-          circuit[c] = tmp;
-          changed = true;
+        if (new_cost < best_known_cost) {
+          circuit = new_tour;
+          improved = true;
+          best_known_cost = new_cost;
         }
       }
     }
 
-    size_t n = circuit.size();
-    if (n < 3) {
-      continue;
-    }
-
-    if (in.d.at(int_pair(min(circuit[n-3], circuit[n-2]), max(circuit[n-3], circuit[n-2]))) +
-        in.d.at(int_pair(min(circuit[n-2], circuit[n-1]), max(circuit[n-2], circuit[n-1]))) >
-        in.d.at(int_pair(min(circuit[n-3], circuit[n-1]), max(circuit[n-3], circuit[n-1]))) +
-        in.d.at(int_pair(min(circuit[n-1], circuit[n-2]), max(circuit[n-1], circuit[n-2])))) {
-
-      int tmp = circuit[n-1];
-      circuit[n-1] = circuit[n-2];
-      circuit[n-2] = tmp;
-      changed = true;
-    }
-
-  } while (changed);
+  } while (improved);
 }
 
 static List<Delivery> christofides(
@@ -354,7 +362,7 @@ static bool is_viable_route(
   double usedTime = 0.0;
 
   for (size_t l = 0; l < route.size() -1; l++) {
-    usedTime += (in.T[k] + in.d.at(Edge(route[l], route[l+1])) / in.M[k]);
+    usedTime += (in.T[k] + in.d.at(Arc(min(route[l], route[l+1]), max(route[l], route[l+1]))) / in.M[k]);
   }
 
   return usedTime <= in.J[k];
