@@ -38,7 +38,7 @@
 #define FREE 0
 #define USED 1
 #define BLOCKED -1
-#define TOLERANCE 1.0
+#define TOLERANCE 0.05
 using namespace std;
 using int_pair = pair<int,int>;
 using int_triple = tuple<int,int,int>;
@@ -49,6 +49,7 @@ using n3_var = vector<vector<vector<GRBVar>>>;
 using n2_var = vector<vector<GRBVar>>;
 using n1_var = vector<GRBVar>;
 using Edge = int_pair;
+using Arc = int_pair;
 using Circuit = vector<int>;
 using Dicircuit = Circuit;
 using Vehicle = int;
