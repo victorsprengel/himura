@@ -17,10 +17,7 @@
 #define MAX_D std::numeric_limits<double>::max()
 #define pi 3.14159265358979323846
 #define R 6373
-#define GAMMA 5
-#define ALPHA 0.7
 #define BETA 0.5
-#define XI 1.5
 #define FIXED_VARS_GIVE_SAME_PACKAGE_TO_TWO_DIFFERENT_VEHICLES 1
 #define NO_PARTITION_CAN_FIT_ANOTHER_PACKAGE 2
 #define FOUND_TOUR_DOESNT_RESPECT_WORKING_HOURS 3
@@ -38,7 +35,6 @@
 #define FREE 0
 #define USED 1
 #define BLOCKED -1
-#define TOLERANCE 0.05
 using namespace std;
 using int_pair = pair<int,int>;
 using int_triple = tuple<int,int,int>;

@@ -5,7 +5,7 @@ LIBS=-lgurobi70 -lgurobi_c++
 bin/router: build/main.o build/input.o build/presolve.o build/dist.o build/dist.o build/graph.o build/ll_node.o build/uf.o build/gurobi_interface.o build/bab.o build/debug.o build/node.o build/subtour_elimination.o build/ub.o
 	$(CXX) $(CPPFLAGS) $^ -o bin/router $(LIBS)
 
-build/main.o: src/main.cpp src/defs.h src/input.h src/presolve.h src/gurobi_interface.h
+build/main.o: src/main.cpp src/defs.h src/input.h src/presolve.h src/gurobi_interface.h src/bab.h
 	$(CXX) $(CPPFLAGS) -c $< -o $@ $(LIBS)
 
 build/input.o: src/input.cpp src/input.h src/dist.h

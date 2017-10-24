@@ -3,6 +3,7 @@
 #include "input.h"
 #include "defs.h"
 #include "graph.h"
+#define GAMMA 5
 
 vector<Partition> find_reach(const Input& in);
 

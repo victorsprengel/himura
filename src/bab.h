@@ -7,6 +7,7 @@
 #include "input.h"
 #include "debug.h"
 #include "ub.h"
+#define TOLERANCE 0.4
 
 Solution branch_and_bound(
     GRBModel& mdl, 

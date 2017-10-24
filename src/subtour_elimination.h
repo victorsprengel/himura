@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "graph.h"
 #include "node.h"
+#define ALPHA 0.7
 
 bool fixed_vars_contain_cycle(node_ptr leaf, const int& n);
 
