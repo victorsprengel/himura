@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   cout.precision(10);
 
   Input in = Input(argv[1], argv[2]);
-  cout << "n = " << in.n << "    m  = " << in.m << endl;
+  cout << "n = " << in.n << "    m  = " << in.m << "    t = " << TOLERANCE << endl;
   vector<Partition> reach = find_reach(in);
   vector<Partition> reached = reached_from_reach(reach, in.n);
 
