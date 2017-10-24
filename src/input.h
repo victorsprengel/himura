@@ -5,7 +5,7 @@
 
 class Input {
  public:
-  vector<double> C, V, M, H, F, E, S, T, J, v, p;
+  vector<double> C, V, M, H, F, E, S, T, J, v, p, lat, lon;
   map<pair<int,int>,double> d;
   Input(char *inVehicles, char *inDeliveries);
   int n, m;

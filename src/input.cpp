@@ -44,7 +44,6 @@ Input::Input(char *inVehicles, char *inDeliveries) {
 
   n = -1; /* 0 is depot */
   ifstream inD(inDeliveries);
-  vector<double> lat, lon;
 
   while (getline(inD, line)) {
     if (line[0] == '#') {
